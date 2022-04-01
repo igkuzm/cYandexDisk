@@ -496,13 +496,8 @@ void *curl_transfer_file_in_thread(void *_params)
 	pthread_exit(0);
 }
 
-int c_yandex_disk_upload_file(const char * filename, const char * path, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
+int _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfer, const char *filename, char *error, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
-	char path_arg[BUFSIZ];
-	sprintf(path_arg, "path=%s", path);
-
-	char *error;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/upload", &error, path_arg, NULL);
 	if (!json) {
 		callback(0,user_data,STR("CONNECTION ERROR: %s", error));
 		return -1;
@@ -532,7 +527,7 @@ int c_yandex_disk_upload_file(const char * filename, const char * path, void *us
 	strcpy(params->url, url->valuestring);
 	params->user_data = user_data;
 	params->callback = callback;
-	params->file_transfer = FILE_UPLOAD;
+	params->file_transfer = file_transfer;
 	params->clientp = clientp;
 	params->progress_callback = progress_callback;
 	//создаем новый поток
@@ -540,9 +535,20 @@ int c_yandex_disk_upload_file(const char * filename, const char * path, void *us
 	if (err) {
 		perror("create THREAD");
 		return err;
-	}	
+	}
 
 	return 0;
+}
+
+int c_yandex_disk_upload_file(const char * filename, const char * path, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
+{
+	char path_arg[BUFSIZ];
+	sprintf(path_arg, "path=%s", path);
+
+	char *error;
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/upload", &error, path_arg, NULL);
+
+	return _c_yandex_disk_transfer_file_parser(json, FILE_UPLOAD, filename, error, user_data, callback, clientp, progress_callback);
 }
 
 int c_yandex_disk_download_file(const char * filename, const char * path, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
@@ -552,47 +558,7 @@ int c_yandex_disk_download_file(const char * filename, const char * path, void *
 
 	char *error = NULL;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/download", &error, path_arg, NULL);
-	if (!json) {
-		callback(0,user_data,STR("CONNECTION ERROR: %s", error));
-		return -1;
-	}
-	cJSON *url = cJSON_GetObjectItem(json, "href");			
-	if (!url) {
-		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		callback(0,user_data,STR("CONNECTION ERROR: %s", message->valuestring));
-		cJSON_free(json);
-		return  -1;
-	}
-
-	//download file in new thread
-	pthread_t tid; //идентификатор потока
-	pthread_attr_t attr; //атрибуты потока
-
-	//получаем дефолтные значения атрибутов
-	int err = pthread_attr_init(&attr);
-	if (err) {
-		perror("THREAD attributes");
-		return err;
-	}	
-
-	//set params
-	struct curl_transfer_file_in_thread_params *params = NEW(struct curl_transfer_file_in_thread_params);
-	params->filename = filename;
-	strcpy(params->url, url->valuestring);
-	params->user_data = user_data;
-	params->callback = callback;
-	params->file_transfer = FILE_DOWNLOAD;
-	params->clientp = clientp;
-	params->progress_callback = progress_callback;	
-
-	//создаем новый поток
-	err = pthread_create(&tid,&attr, curl_transfer_file_in_thread, params);
-	if (err) {
-		perror("create THREAD");
-		return err;
-	}	
-
-	return 0;
+	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, filename, error, user_data, callback, clientp, progress_callback);
 }
 
 int c_yandex_disk_download_public_resource(const char * filename, const char * public_key, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
@@ -602,47 +568,7 @@ int c_yandex_disk_download_public_resource(const char * filename, const char * p
 
 	char *error = NULL;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources/download", &error, public_key_arg, NULL);
-	if (!json) {
-		callback(0,user_data,STR("CONNECTION ERROR: %s", error));
-		return -1;
-	}
-	cJSON *url = cJSON_GetObjectItem(json, "href");			
-	if (!url) {
-		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		callback(0,user_data,STR("CONNECTION ERROR: %s", message->valuestring));
-		cJSON_free(json);
-		return  -1;
-	}
-
-	//download file in new thread
-	pthread_t tid; //идентификатор потока
-	pthread_attr_t attr; //атрибуты потока
-
-	//получаем дефолтные значения атрибутов
-	int err = pthread_attr_init(&attr);
-	if (err) {
-		perror("THREAD attributes");
-		return err;
-	}	
-
-	//set params
-	struct curl_transfer_file_in_thread_params *params = NEW(struct curl_transfer_file_in_thread_params);
-	params->filename = filename;
-	strcpy(params->url, url->valuestring);
-	params->user_data = user_data;
-	params->callback = callback;
-	params->file_transfer = FILE_DOWNLOAD;
-	params->clientp = clientp;
-	params->progress_callback = progress_callback;	
-
-	//создаем новый поток
-	err = pthread_create(&tid,&attr, curl_transfer_file_in_thread, params);
-	if (err) {
-		perror("create THREAD");
-		return err;
-	}	
-
-	return 0;
+	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, filename, error, user_data, callback, clientp, progress_callback);
 }
 
 int c_json_to_c_yd_file_t(cJSON *json, c_yd_file_t *file)
@@ -674,75 +600,146 @@ int c_json_to_c_yd_file_t(cJSON *json, c_yd_file_t *file)
 	return 0;
 }
 
+int _c_yandex_disk_ls_parser(cJSON *json, char *error, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
+{
+	if (!json) { //no json returned
+		callback(NULL,user_data,STR("CONNECTION ERROR: %s", error));
+		return -1;
+	}
+	if (!cJSON_GetObjectItem(json, "path")){ //error to get info of file/directory
+		cJSON *message = cJSON_GetObjectItem(json, "message");			
+		callback(NULL,user_data,STR("CONNECTION ERROR: %s", message->valuestring));
+		cJSON_free(json);
+		return  -1;
+	}	
+	cJSON *items = cJSON_GetObjectItem(json, "items");
+	if (items) { //we have items in directory
+		int count = cJSON_GetArraySize(items);
+		for (int i = 0; i < count; ++i) {
+			cJSON *item = cJSON_GetArrayItem(items, i);
+			c_yd_file_t file;
+			c_json_to_c_yd_file_t(item, &file);
+			callback(&file, user_data, NULL);				
+		}
+		
+	} else { //no items - return file info
+		c_yd_file_t file;
+		c_json_to_c_yd_file_t(json, &file);
+		callback(&file, user_data, NULL);
+	}	
+
+	return 0;
+}	
+
 int c_yandex_disk_ls(const char * path, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
 {
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);	
 
-	char *error;
+	char *error = NULL;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources", &error, path_arg, NULL);
-	if (!json) { //no json returned
-		callback(NULL,user_data,STR("CONNECTION ERROR: %s", error));
-		return -1;
-	}
-	if (cJSON_GetObjectItem(json, "path")){ //error to get info of file/directory
-		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		callback(NULL,user_data,STR("CONNECTION ERROR: %s", message->valuestring));
-		cJSON_free(json);
-		return  -1;
-	}	
-	cJSON *items = cJSON_GetObjectItem(json, "items");
-	if (items) { //we have items in directory
-		int count = cJSON_GetArraySize(items);
-		for (int i = 0; i < count; ++i) {
-			cJSON *item = cJSON_GetArrayItem(items, i);
-			c_yd_file_t file;
-			c_json_to_c_yd_file_t(item, &file);
-			callback(&file, user_data, NULL);				
-		}
-		
-	} else { //no items - return file info
-		c_yd_file_t file;
-		c_json_to_c_yd_file_t(json, &file);
-		callback(&file, user_data, NULL);
-	}
-
-
-	return 0;
+	
+	return _c_yandex_disk_ls_parser(json, error, user_data, callback);
 }
 
 int c_yandex_disk_ls_public(void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
 {
-	char *error;
+	char *error = NULL;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/public", &error, NULL);
+	
+	return _c_yandex_disk_ls_parser(json, error, user_data, callback);
+}
+
+int _c_yandex_disk_standart_parser(cJSON *json, char **error){
+	if (!json) //no json returned
+		return -1;
+
+	if (!cJSON_GetObjectItem(json, "href")){ //error to get info
+		cJSON *message = cJSON_GetObjectItem(json, "message");			
+		ERROR_TO_POINTER(error, "CONNECTION ERROR: %s", message->valuestring);
+		cJSON_free(json);
+		return  -1;		
+	}	
+	cJSON_free(json);
+	return 0;	
+}
+
+
+int _c_yandex_disk_async_operation(const char *operation_id, void *user_data, int(*callback)(void *user_data, char *error))
+{
+	char url_suffix[BUFSIZ];
+	sprintf(url_suffix, "v1/disk/operations/%s", operation_id);
+
+	char *error = NULL;
+	cJSON *json = c_yandex_disk_api("GET", url_suffix, &error, NULL);	
+
 	if (!json) { //no json returned
-		callback(NULL,user_data,STR("CONNECTION ERROR: %s", error));
+		callback(user_data,STR("CONNECTION ERROR: %s", error));
 		return -1;
 	}
-	if (cJSON_GetObjectItem(json, "path")){ //error to get info of file/directory
+	if (!cJSON_GetObjectItem(json, "href")){ //error to get info
 		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		callback(NULL,user_data,STR("CONNECTION ERROR: %s", message->valuestring));
+		callback(user_data,STR("CONNECTION ERROR: %s", message->valuestring));
 		cJSON_free(json);
 		return  -1;
 	}	
-	cJSON *items = cJSON_GetObjectItem(json, "items");
-	if (items) { //we have items in directory
-		int count = cJSON_GetArraySize(items);
-		for (int i = 0; i < count; ++i) {
-			cJSON *item = cJSON_GetArrayItem(items, i);
-			c_yd_file_t file;
-			c_json_to_c_yd_file_t(item, &file);
-			callback(&file, user_data, NULL);				
-		}
-		
-	} else { //no items - return file info
-		c_yd_file_t file;
-		c_json_to_c_yd_file_t(json, &file);
-		callback(&file, user_data, NULL);
-	}
-
 
 	return 0;
+}
+
+struct _c_yandex_disk_async_parser_params {
+	char operation_id[BUFSIZ];
+	void *user_data;
+	int(*callback)(void *user_data, char *error);
+};
+
+void * _c_yandex_disk_async_operation_in_thead(void *_params)
+{
+	struct _c_yandex_disk_async_parser_params *params = _params;
+	_c_yandex_disk_async_operation(params->operation_id, params->user_data, params->callback);
+	free(params);
+	pthread_exit(0);	
+}
+
+int _c_yandex_disk_async_parser(cJSON *json, void *user_data, int(*callback)(void *user_data, char *error)){
+	if (!json) //no json returned
+		return -1;
+
+	cJSON *operation_id = cJSON_GetObjectItem(json, "href"); 
+	if (!operation_id){ //error to get info
+		cJSON *message = cJSON_GetObjectItem(json, "message");			
+		callback(user_data, STR("CONNECTION ERROR: %s", message->valuestring));
+		cJSON_free(json);
+		return  -1;		
+	}	
+
+	pthread_t tid; //идентификатор потока
+	pthread_attr_t attr; //атрибуты потока
+
+	//получаем дефолтные значения атрибутов
+	int err = pthread_attr_init(&attr);
+	if (err) {
+		perror("THREAD attributes");
+		cJSON_free(json);
+		return err;
+	}	
+
+	//set params
+	struct _c_yandex_disk_async_parser_params *params = NEW(struct _c_yandex_disk_async_parser_params);
+	strcpy(params->operation_id, operation_id->valuestring);
+	params->user_data = user_data;
+	params->callback = callback;
+
+	cJSON_free(json);
+	
+	//создаем новый поток
+	err = pthread_create(&tid,&attr, _c_yandex_disk_async_operation_in_thead, params);
+	if (err) {
+		perror("create THREAD");
+		return err;
+	}	
+
+	return 0;	
 }
 
 int c_yandex_disk_mkdir(const char * path, char **error)
@@ -751,20 +748,10 @@ int c_yandex_disk_mkdir(const char * path, char **error)
 	sprintf(path_arg, "path=%s", path);	
 
 	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/resources", error, path_arg, NULL);
-	if (!json) //no json returned
-		return -1;
-
-	if (cJSON_GetObjectItem(json, "href")){ //error to get info
-		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		ERROR_TO_POINTER(error, "CONNECTION ERROR: %s", message->valuestring);
-		cJSON_free(json);
-		return  -1;		
-	}	
-	cJSON_free(json);
-	return 0;
+	return _c_yandex_disk_standart_parser(json, error);
 }
 
-int c_yandex_disk_cp(const char * from, const char * to, bool overwrite, char **error)
+int c_yandex_disk_cp(const char * from, const char * to, bool overwrite, void *user_data, int(*callback)(void *user_data, char *error))
 {
 	char from_arg[BUFSIZ];
 	sprintf(from_arg, "from=%s", from);	
@@ -777,22 +764,13 @@ int c_yandex_disk_cp(const char * from, const char * to, bool overwrite, char **
 
 	char async_arg[] = "force_async=true";
 
-	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/copy", error, from_arg, path_arg, overwrite_arg, async_arg, NULL);
-	if (!json) //no json returned
-		return -1;
-
-	if (cJSON_GetObjectItem(json, "href")){ //error to get info
-		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		ERROR_TO_POINTER(error, "CONNECTION ERROR: %s", message->valuestring);
-		cJSON_free(json);
-		return  -1;		
-	}	
-	cJSON_free(json);
-
-	return 0;
+	char *error = NULL;
+	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/copy", &error, from_arg, path_arg, overwrite_arg, async_arg, NULL);
+	if (error) callback(user_data, error);
+	return _c_yandex_disk_async_parser(json, user_data, callback);
 }
 
-int c_yandex_disk_mv(const char * from, const char * to, bool overwrite, char **error)
+int c_yandex_disk_mv(const char * from, const char * to, bool overwrite, void *user_data, int(*callback)(void *user_data, char *error))
 {
 	char from_arg[BUFSIZ];
 	sprintf(from_arg, "from=%s", from);	
@@ -805,19 +783,10 @@ int c_yandex_disk_mv(const char * from, const char * to, bool overwrite, char **
 
 	char async_arg[] = "force_async=true";
 
-	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/move", error, from_arg, path_arg, overwrite_arg, async_arg, NULL);
-	if (!json) //no json returned
-		return -1;
-
-	if (cJSON_GetObjectItem(json, "href")){ //error to get info
-		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		ERROR_TO_POINTER(error, "CONNECTION ERROR: %s", message->valuestring);
-		cJSON_free(json);
-		return  -1;		
-	}	
-	cJSON_free(json);
-
-	return 0;
+	char *error = NULL;
+	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/move", &error, from_arg, path_arg, overwrite_arg, async_arg, NULL);
+	if (error) callback(user_data, error);
+	return _c_yandex_disk_async_parser(json, user_data, callback);
 }
 
 int c_yandex_disk_publish(const char * path, char **error)
@@ -826,17 +795,7 @@ int c_yandex_disk_publish(const char * path, char **error)
 	sprintf(path_arg, "path=%s", path);	
 
 	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/resources/publish", error, path_arg, NULL);
-	if (!json) //no json returned
-		return -1;
-
-	if (cJSON_GetObjectItem(json, "href")){ //error to get info
-		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		ERROR_TO_POINTER(error, "CONNECTION ERROR: %s", message->valuestring);
-		cJSON_free(json);
-		return  -1;		
-	}	
-	cJSON_free(json);
-	return 0;
+	return _c_yandex_disk_standart_parser(json, error);
 }
 
 int c_yandex_disk_unpublish(const char * path, char **error)
@@ -845,17 +804,7 @@ int c_yandex_disk_unpublish(const char * path, char **error)
 	sprintf(path_arg, "path=%s", path);	
 
 	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/resources/unpublish", error, path_arg, NULL);
-	if (!json) //no json returned
-		return -1;
-
-	if (cJSON_GetObjectItem(json, "href")){ //error to get info
-		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		ERROR_TO_POINTER(error, "CONNECTION ERROR: %s", message->valuestring);
-		cJSON_free(json);
-		return  -1;		
-	}	
-	cJSON_free(json);
-	return 0;
+	return _c_yandex_disk_standart_parser(json, error);
 }
 
 int c_yandex_disk_public_ls(const char * public_key, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
@@ -863,39 +812,12 @@ int c_yandex_disk_public_ls(const char * public_key, void * user_data, int(*call
 	char public_key_arg[BUFSIZ];
 	sprintf(public_key_arg, "public_key=%s", public_key);	
 	
-	char *error;
+	char *error = NULL;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources", &error, public_key_arg, NULL);
-	if (!json) { //no json returned
-		callback(NULL,user_data,STR("CONNECTION ERROR: %s", error));
-		return -1;
-	}
-	if (cJSON_GetObjectItem(json, "path")){ //error to get info of file/directory
-		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		callback(NULL,user_data,STR("CONNECTION ERROR: %s", message->valuestring));
-		cJSON_free(json);
-		return  -1;
-	}	
-	cJSON *items = cJSON_GetObjectItem(json, "items");
-	if (items) { //we have items in directory
-		int count = cJSON_GetArraySize(items);
-		for (int i = 0; i < count; ++i) {
-			cJSON *item = cJSON_GetArrayItem(items, i);
-			c_yd_file_t file;
-			c_json_to_c_yd_file_t(item, &file);
-			callback(&file, user_data, NULL);				
-		}
-		
-	} else { //no items - return file info
-		c_yd_file_t file;
-		c_json_to_c_yd_file_t(json, &file);
-		callback(&file, user_data, NULL);
-	}
-
-
-	return 0;
+	return _c_yandex_disk_ls_parser(json, error, user_data, callback);
 }
 
-int c_yandex_disk_public_cp(const char * public_key, const char * to, char **error)
+int c_yandex_disk_public_cp(const char * public_key, const char * to, void *user_data, int(*callback)(void *user_data, char *error))
 {
 	char public_key_arg[BUFSIZ];
 	sprintf(public_key_arg, "public_key=%s", public_key);	
@@ -905,17 +827,8 @@ int c_yandex_disk_public_cp(const char * public_key, const char * to, char **err
 
 	char async_arg[] = "force_async=true";
 
-	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/copy", error, public_key_arg, save_path_arg, async_arg, NULL);
-	if (!json) //no json returned
-		return -1;
-
-	if (cJSON_GetObjectItem(json, "href")){ //error to get info
-		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		ERROR_TO_POINTER(error, "CONNECTION ERROR: %s", message->valuestring);
-		cJSON_free(json);
-		return  -1;		
-	}	
-	cJSON_free(json);
-
-	return 0;
+	char *error = NULL;
+	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/copy", &error, public_key_arg, save_path_arg, async_arg, NULL);
+	if (error) callback(user_data, error);
+	return _c_yandex_disk_async_parser(json, user_data, callback);
 }
