@@ -63,7 +63,7 @@ void c_yandex_disk_set_config_path(const char *_config_path){
 	config_path[BUFSIZ-1] = '\0';
 }
 
-void c_yandex_disk_init(const char * config_file_path)
+void c_yandex_disk_config_init(const char * config_file_path)
 {
 	if (config_file_path != NULL) c_yandex_disk_set_config_path(config_file_path);
 		
@@ -163,11 +163,12 @@ int check_no_client_device_name(char **error){
 }
 
 int check_no_client_device_id(char **error){
-	if (check_no_config(error))	return -1;
-	if (!(config->set & DEVICE_ID_SET)) {
-		if (c_yandex_disk_set_device_id()){
-			ERROR_TO_POINTER(error, "Error. Device id is not set. Can't set UUID\n");	
-			return -1;
+	if (config) {
+		if (!(config->set & DEVICE_ID_SET)) {
+			if (c_yandex_disk_set_device_id()){
+				ERROR_TO_POINTER(error, "Error. Device id is not set. Can't set UUID\n");	
+				return -1;
+			}
 		}
 	}
 	return 0;
@@ -204,23 +205,54 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s)
 	return size*nmemb;
 }
 
-char *c_yandex_disk_url_to_ask_for_authorization_code(char **error){
-	if (check_no_client_id(error))	return NULL;
+char *c_yandex_disk_url_to_ask_for_authorization_code(const char *client_id,  char **error) {
+	
+	if (client_id == NULL) {
+		if (check_no_client_id(error))	return NULL;
+		client_id = config->client_id; 
+	}
 
 	char *requestString = MALLOC(BUFSIZ);
 	
 	sprintf(requestString, "\"https://oauth.yandex.ru/authorize?response_type=code");	
-	sprintf(requestString, "%s&client_id=%s\"", requestString, config->client_id);
+	sprintf(requestString, "%s&client_id=%s\"", requestString, client_id);
 	
 	return requestString;
 }
 
-char *c_yandex_disk_get_token(const char *authorization_code, char **error){
+char *c_yandex_disk_get_token(const char *authorization_code, const char *client_id, const char *client_secret, const char *device_name, char **error){
+	if (authorization_code != NULL) {
+		ERROR_TO_POINTER(error, "No authorization_code.");
+		return NULL;
+	}
 
-	if (check_no_client_id(error))			return NULL;
-	if (check_no_client_secret(error))		return NULL;
-	if (check_no_client_device_name(error))	return NULL;
-	if (check_no_client_device_id(error))	return NULL;
+	if (client_id == NULL) {
+		if (check_no_client_id(error))			return NULL;
+		client_id = config->client_id; 
+	}
+	if (client_secret == NULL) {
+		if (check_no_client_secret(error))		return NULL;
+		client_secret = config->client_secret;
+	}
+	if (device_name == NULL) {	
+		if (check_no_client_device_name(error))	return NULL;
+		device_name = config->device_name;
+	}
+	char *device_id; 
+	char device_uuid[37];
+	UUID4_STATE_T state; UUID4_T uuid;
+	uuid4_seed(&state);
+	uuid4_gen(&state, &uuid);
+	if (!uuid4_to_s(uuid, device_uuid, 37)){
+		ERROR_TO_POINTER(error, "Can't genarate UUID");
+		return NULL;
+	}
+	device_id = device_uuid;
+	
+	if (device_name == NULL) {	
+		if (check_no_client_device_id(error))	    return NULL;
+		device_id = config->device_id;
+	}
 
 	CURL *curl = curl_easy_init();
 		
@@ -242,10 +274,10 @@ char *c_yandex_disk_get_token(const char *authorization_code, char **error){
 		char post[BUFSIZ];
 		sprintf(post, "grant_type=authorization_code");		
 		sprintf(post, "%s&code=%s",				post, authorization_code);
-		sprintf(post, "%s&client_id=%s",		post, config->client_id);
-		sprintf(post, "%s&client_secret=%s",	post, config->client_secret);
-		sprintf(post, "%s&device_id=%s",		post, config->device_id);
-		sprintf(post, "%s&device_name=%s",		post, config->device_name);
+		sprintf(post, "%s&client_id=%s",		post, client_id);
+		sprintf(post, "%s&client_secret=%s",	post, client_secret);
+		sprintf(post, "%s&device_id=%s",		post, device_id);
+		sprintf(post, "%s&device_name=%s",		post, device_name);
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post);
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(post));
 	    
@@ -280,12 +312,15 @@ char *c_yandex_disk_get_token(const char *authorization_code, char **error){
 				return NULL;
 			}
 			//OK - we have a token
-			c_yandex_disk_set_token(access_token->valuestring);
+			char * token = MALLOC(BUFSIZ);
+			strncpy(token, access_token->valuestring, BUFSIZ - 1);	
+			token[BUFSIZ - 1] = '\0';
+			if (config)
+				c_yandex_disk_set_token(access_token->valuestring);
 			cJSON_free(json);
-			return config->token;
+			return token;
 		}	
 	}
-	free(s.ptr);
 	return NULL;
 }
 
@@ -398,11 +433,14 @@ int curl_upload_file(const char * filename, const char * url, void *user_data, i
 	return 0;
 }
 
-cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, char **error, ...)
+cJSON *c_yandex_disk_api(const char * token, const char * http_method, const char *api_suffix, char **error, ...)
 {
-	if (check_no_token(error)) return NULL;
+	if (token == NULL) {
+		token=config->token;
+		if (check_no_token(error)) return NULL;
+	}
 	char authorization[BUFSIZ];
-	sprintf(authorization, "Authorization: OAuth %s", config->token);
+	sprintf(authorization, "Authorization: OAuth %s", token);
 
 	CURL *curl = curl_easy_init();
 		
@@ -540,34 +578,34 @@ int _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfer
 	return 0;
 }
 
-int c_yandex_disk_upload_file(const char * filename, const char * path, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
+int c_yandex_disk_upload_file(const char * token, const char * filename, const char * path, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);
 
 	char *error;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/upload", &error, path_arg, NULL);
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/upload", token, &error, path_arg, NULL);
 
 	return _c_yandex_disk_transfer_file_parser(json, FILE_UPLOAD, filename, error, user_data, callback, clientp, progress_callback);
 }
 
-int c_yandex_disk_download_file(const char * filename, const char * path, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
+int c_yandex_disk_download_file(const char * token, const char * filename, const char * path, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);
 
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/download", &error, path_arg, NULL);
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/download", token, &error, path_arg, NULL);
 	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, filename, error, user_data, callback, clientp, progress_callback);
 }
 
-int c_yandex_disk_download_public_resource(const char * filename, const char * public_key, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
+int c_yandex_disk_download_public_resource(const char * token, const char * filename, const char * public_key, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	char public_key_arg[BUFSIZ];
 	sprintf(public_key_arg, "public_key=%s", public_key);	
 
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources/download", &error, public_key_arg, NULL);
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources/download", token, &error, public_key_arg, NULL);
 	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, filename, error, user_data, callback, clientp, progress_callback);
 }
 
@@ -631,21 +669,21 @@ int _c_yandex_disk_ls_parser(cJSON *json, char *error, void * user_data, int(*ca
 	return 0;
 }	
 
-int c_yandex_disk_ls(const char * path, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
+int c_yandex_disk_ls(const char * token, const char * path, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
 {
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);	
 
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources", &error, path_arg, NULL);
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources", token, &error, path_arg, NULL);
 	
 	return _c_yandex_disk_ls_parser(json, error, user_data, callback);
 }
 
-int c_yandex_disk_ls_public(void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
+int c_yandex_disk_ls_public(const char * token, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
 {
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/public", &error, NULL);
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/public", token, &error, NULL);
 	
 	return _c_yandex_disk_ls_parser(json, error, user_data, callback);
 }
@@ -665,13 +703,13 @@ int _c_yandex_disk_standart_parser(cJSON *json, char **error){
 }
 
 
-int _c_yandex_disk_async_operation(const char *operation_id, void *user_data, int(*callback)(void *user_data, char *error))
+int _c_yandex_disk_async_operation(const char * token, const char *operation_id, void *user_data, int(*callback)(void *user_data, char *error))
 {
 	char url_suffix[BUFSIZ];
 	sprintf(url_suffix, "v1/disk/operations/%s", operation_id);
 
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", url_suffix, &error, NULL);	
+	cJSON *json = c_yandex_disk_api("GET", url_suffix, token, &error, NULL);	
 
 	if (!json) { //no json returned
 		callback(user_data,STR("CONNECTION ERROR: %s", error));
@@ -689,6 +727,7 @@ int _c_yandex_disk_async_operation(const char *operation_id, void *user_data, in
 
 struct _c_yandex_disk_async_parser_params {
 	char operation_id[BUFSIZ];
+	const char *token;
 	void *user_data;
 	int(*callback)(void *user_data, char *error);
 };
@@ -696,12 +735,12 @@ struct _c_yandex_disk_async_parser_params {
 void * _c_yandex_disk_async_operation_in_thead(void *_params)
 {
 	struct _c_yandex_disk_async_parser_params *params = _params;
-	_c_yandex_disk_async_operation(params->operation_id, params->user_data, params->callback);
+	_c_yandex_disk_async_operation(params->token, params->operation_id, params->user_data, params->callback);
 	free(params);
 	pthread_exit(0);	
 }
 
-int _c_yandex_disk_async_parser(cJSON *json, void *user_data, int(*callback)(void *user_data, char *error)){
+int _c_yandex_disk_async_parser(cJSON *json, const char * token, void *user_data, int(*callback)(void *user_data, char *error)){
 	if (!json) //no json returned
 		return -1;
 
@@ -729,6 +768,7 @@ int _c_yandex_disk_async_parser(cJSON *json, void *user_data, int(*callback)(voi
 	strcpy(params->operation_id, operation_id->valuestring);
 	params->user_data = user_data;
 	params->callback = callback;
+	params->token = token;
 
 	cJSON_free(json);
 	
@@ -742,16 +782,16 @@ int _c_yandex_disk_async_parser(cJSON *json, void *user_data, int(*callback)(voi
 	return 0;	
 }
 
-int c_yandex_disk_mkdir(const char * path, char **error)
+int c_yandex_disk_mkdir(const char * token, const char * path, char **error)
 {
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);	
 
-	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/resources", error, path_arg, NULL);
+	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/resources", token, error, path_arg, NULL);
 	return _c_yandex_disk_standart_parser(json, error);
 }
 
-int c_yandex_disk_cp(const char * from, const char * to, bool overwrite, void *user_data, int(*callback)(void *user_data, char *error))
+int c_yandex_disk_cp(const char * token, const char * from, const char * to, bool overwrite, void *user_data, int(*callback)(void *user_data, char *error))
 {
 	char from_arg[BUFSIZ];
 	sprintf(from_arg, "from=%s", from);	
@@ -765,12 +805,12 @@ int c_yandex_disk_cp(const char * from, const char * to, bool overwrite, void *u
 	char async_arg[] = "force_async=true";
 
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/copy", &error, from_arg, path_arg, overwrite_arg, async_arg, NULL);
+	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/copy", token, &error, from_arg, path_arg, overwrite_arg, async_arg, NULL);
 	if (error) callback(user_data, error);
-	return _c_yandex_disk_async_parser(json, user_data, callback);
+	return _c_yandex_disk_async_parser(json, token, user_data, callback);
 }
 
-int c_yandex_disk_mv(const char * from, const char * to, bool overwrite, void *user_data, int(*callback)(void *user_data, char *error))
+int c_yandex_disk_mv(const char * token, const char * from, const char * to, bool overwrite, void *user_data, int(*callback)(void *user_data, char *error))
 {
 	char from_arg[BUFSIZ];
 	sprintf(from_arg, "from=%s", from);	
@@ -784,40 +824,40 @@ int c_yandex_disk_mv(const char * from, const char * to, bool overwrite, void *u
 	char async_arg[] = "force_async=true";
 
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/move", &error, from_arg, path_arg, overwrite_arg, async_arg, NULL);
+	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/move", token, &error, from_arg, path_arg, overwrite_arg, async_arg, NULL);
 	if (error) callback(user_data, error);
-	return _c_yandex_disk_async_parser(json, user_data, callback);
+	return _c_yandex_disk_async_parser(json, token, user_data, callback);
 }
 
-int c_yandex_disk_publish(const char * path, char **error)
+int c_yandex_disk_publish(const char * token, const char * path, char **error)
 {
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);	
 
-	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/resources/publish", error, path_arg, NULL);
+	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/resources/publish", token, error, path_arg, NULL);
 	return _c_yandex_disk_standart_parser(json, error);
 }
 
-int c_yandex_disk_unpublish(const char * path, char **error)
+int c_yandex_disk_unpublish(const char * token, const char * path, char **error)
 {
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);	
 
-	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/resources/unpublish", error, path_arg, NULL);
+	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/resources/unpublish", token, error, path_arg, NULL);
 	return _c_yandex_disk_standart_parser(json, error);
 }
 
-int c_yandex_disk_public_ls(const char * public_key, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
+int c_yandex_disk_public_ls(const char * token, const char * public_key, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
 {
 	char public_key_arg[BUFSIZ];
 	sprintf(public_key_arg, "public_key=%s", public_key);	
 	
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources", &error, public_key_arg, NULL);
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources", token, &error, public_key_arg, NULL);
 	return _c_yandex_disk_ls_parser(json, error, user_data, callback);
 }
 
-int c_yandex_disk_public_cp(const char * public_key, const char * to, void *user_data, int(*callback)(void *user_data, char *error))
+int c_yandex_disk_public_cp(const char * token, const char * public_key, const char * to, void *user_data, int(*callback)(void *user_data, char *error))
 {
 	char public_key_arg[BUFSIZ];
 	sprintf(public_key_arg, "public_key=%s", public_key);	
@@ -828,7 +868,7 @@ int c_yandex_disk_public_cp(const char * public_key, const char * to, void *user
 	char async_arg[] = "force_async=true";
 
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/copy", &error, public_key_arg, save_path_arg, async_arg, NULL);
+	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/copy", token, &error, public_key_arg, save_path_arg, async_arg, NULL);
 	if (error) callback(user_data, error);
-	return _c_yandex_disk_async_parser(json, user_data, callback);
+	return _c_yandex_disk_async_parser(json, token, user_data, callback);
 }
