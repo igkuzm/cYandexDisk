@@ -22,36 +22,15 @@
 #define API_URL "https://cloud-api.yandex.net"
 #define VERIFY_SSL 0
 
-// memory allocation helpers
-#define MALLOC(size)	\
-({	\
-	void* const ___p = malloc(size); \
-	if(!___p) {perror("Malloc"); exit(EXIT_FAILURE);} \
-	___p;\
-})
-
-#define REALLOC(ptr, size)	\
-({	\
-	void* const ___s = ptr; \
-	void* const ___p = realloc(___s, size);	\
-	if(!___p) { perror("Realloc"); exit(EXIT_FAILURE); }	\
-	___p;\
-})
-
-#define FREE(ptr) \
-({\
-	if (ptr)\
-		free(ptr);\
-	ptr = NULL;\
-})
-
+//memory allocation helpers
+#define MALLOC(size) ({void* const ___p = malloc(size); if(!___p) {perror("Malloc"); exit(EXIT_FAILURE);} ___p;})
+#define REALLOC(ptr, size)	({ void* const ___s = ptr; void* const ___p = realloc(___s, size);	if(!___p) { perror("Realloc"); exit(EXIT_FAILURE); } ___p; })
 #define NEW(T) ((T*)MALLOC(sizeof(T)))
 
 //error and string helpers
 #define ERROR(ptr, ...) ({if(ptr) {*ptr = MALLOC(BUFSIZ); sprintf(*ptr, __VA_ARGS__);};})
 #define STR(...) ({char ___str[BUFSIZ]; sprintf(___str, __VA_ARGS__); ___str;})
 #define STRCOPY(str0, str1) ({size_t ___size = sizeof(str0); strncpy(str0, str1, ___size - 1); str0[___size - 1] = '\0';})
-
 
 struct string {
 	char *ptr;
