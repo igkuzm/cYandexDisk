@@ -516,7 +516,7 @@ int _c_yandex_disk_standart_parser(cJSON *json, char **error){
 	if (!json) //no json returned
 		return -1;
 
-	if (!cJSON_GetObjectItem(json, "href")){ //error to get info
+	if (!cJSON_GetObjectItem(json, "href") && !cJSON_GetObjectItem(json, "path")){ //error to get info
 		cJSON *message = cJSON_GetObjectItem(json, "message");			
 		ERROR(error, "CONNECTION ERROR: %s", message->valuestring);
 		cJSON_free(json);
@@ -622,6 +622,7 @@ int c_yandex_disk_patch(const char * token, const char * path, const char *json_
 
 	cJSON *json = c_yandex_disk_api("PATCH", "v1/disk/resources", json_data, token, error, path_arg, NULL);
 	return _c_yandex_disk_standart_parser(json, error);
+	return 0;
 }
 
 int c_yandex_disk_cp(const char * token, const char * from, const char * to, bool overwrite, void *user_data, int(*callback)(void *user_data, char *error))
