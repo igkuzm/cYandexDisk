@@ -2,7 +2,7 @@
  * File              : test.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 29.03.2022
- * Last Modified Date: 01.04.2022
+ * Last Modified Date: 02.04.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -57,26 +57,7 @@ int main(int argc, char *argv[])
 {
 	printf("cYandexDisk Test\n");
 
-	c_yandex_disk_init(NULL);
-
-	c_yandex_disk_download_file("/Users/kuzmich/Desktop/test.jpeg", "app:/test.jpeg", NULL, callback, NULL, progress_callback);
-
-	//c_yandex_disk_set_client_id("ece7ecbbee8d4271898d8e720127e8ce");
-	//c_yandex_disk_set_client_secret("7d9749a3955047eab0455b1019879835");
-	//c_yandex_disk_set_device_name("test platform");
-	
-	//if (c_yandex_disk_set_device_id()){
-		//return -1;
-	//}
-
-	//char *requestString = c_yandex_disk_url_to_ask_for_authorization_code(NULL);
-	//char openurl[BUFSIZ];
-	//sprintf(openurl, "open %s", requestString);
-	//system(openurl);
-	//free(requestString);
-
-	//printf("ENTER THE CODE:\n");
-	//char *authorization_code = readString();
+	c_yandex_disk_download_file("AQAAAABVlmyCAAfIlGdowLE_UEJ3s5VLRpHRwPo", "/Users/kuzmich/Desktop/test.jpeg", "app:/test.jpeg", NULL, callback, NULL, progress_callback);
 
 	//char *error;
 	//char *token = c_yandex_disk_get_token(authorization_code, &error);

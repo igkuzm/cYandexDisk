@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 29.03.2022
- * Last Modified Date: 01.04.2022
+ * Last Modified Date: 02.04.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -48,10 +48,9 @@
 
 #define NEW(T) ((T*)MALLOC(sizeof(T)))
 
-#define ERROR_ALLOC(ptr) ({if(ptr) {*ptr = MALLOC(BUFSIZ);};})
-#define ERROR_TO_POINTER(ptr, ...) ({if(ptr) {ERROR_ALLOC(ptr); sprintf(*ptr, __VA_ARGS__);};})
+//error and string helpers
+#define ERROR(ptr, ...) ({if(ptr) {*ptr = MALLOC(BUFSIZ); sprintf(*ptr, __VA_ARGS__);};})
 #define STR(...) ({char ___str[BUFSIZ]; sprintf(___str, __VA_ARGS__); ___str;})
-
 #define STRCOPY(str0, str1) ({size_t ___size = sizeof(str0); strncpy(str0, str1, ___size - 1); str0[___size - 1] = '\0';})
 
 
@@ -129,7 +128,7 @@ void c_yandex_disk_set_token(const char *token){
 
 int check_no_config(char **error){
 	if (!config) {
-		ERROR_TO_POINTER(error, "Error. c_yandex_disk is not initilized, you should run c_yandex_disk_init()\n");
+		ERROR(error, "Error. c_yandex_disk is not initilized, you should run c_yandex_disk_init()\n");
 		return -1;
 	}	
 	return 0;
@@ -138,7 +137,7 @@ int check_no_config(char **error){
 int check_no_client_id(char **error){
 	if (check_no_config(error))	return -1;
 	if (!(config->set & CLIENT_ID_SET)) {
-		ERROR_TO_POINTER(error, "Error. Client id is not set. You should run c_yandex_disk_set_client_id(client_id)\n");	
+		ERROR(error, "Error. Client id is not set. You should run c_yandex_disk_set_client_id(client_id)\n");	
 		return -1;
 	}
 	return 0;
@@ -147,7 +146,7 @@ int check_no_client_id(char **error){
 int check_no_client_secret(char **error){
 	if (check_no_config(error))	return -1;
 	if (!(config->set & CLIENT_SECRET_SET)) {
-		ERROR_TO_POINTER(error, "Error. Client secret is not set. You should run c_yandex_disk_set_client_secret(client_secret)\n");	
+		ERROR(error, "Error. Client secret is not set. You should run c_yandex_disk_set_client_secret(client_secret)\n");	
 		return -1;
 	}
 	return 0;
@@ -156,7 +155,7 @@ int check_no_client_secret(char **error){
 int check_no_client_device_name(char **error){
 	if (check_no_config(error))	return -1;
 	if (!(config->set & DEVICE_NAME_SET)) {
-		ERROR_TO_POINTER(error, "Error. Device name is not set. You should run c_yandex_disk_set_device_name(device_name)\n");	
+		ERROR(error, "Error. Device name is not set. You should run c_yandex_disk_set_device_name(device_name)\n");	
 		return -1;
 	}
 	return 0;
@@ -166,7 +165,7 @@ int check_no_client_device_id(char **error){
 	if (config) {
 		if (!(config->set & DEVICE_ID_SET)) {
 			if (c_yandex_disk_set_device_id()){
-				ERROR_TO_POINTER(error, "Error. Device id is not set. Can't set UUID\n");	
+				ERROR(error, "Error. Device id is not set. Can't set UUID\n");	
 				return -1;
 			}
 		}
@@ -177,7 +176,7 @@ int check_no_client_device_id(char **error){
 int check_no_token(char **error){
 	if (check_no_config(error))	return -1;
 	if (!(config->set & TOKEN_SET)) {
-		ERROR_TO_POINTER(error, "Error. Token is not set. You should get token from Yandex. Get authorization code first: open URL c_yandex_disk_ask_for_authorization_code(&error) to enable access of application and get code. Then get token with c_yandex_disk_get_token(authorization_code, &error)\n");	
+		ERROR(error, "Error. Token is not set. You should get token from Yandex. Get authorization code first: open URL c_yandex_disk_ask_for_authorization_code(&error) to enable access of application and get code. Then get token with c_yandex_disk_get_token(authorization_code, &error)\n");	
 		return -1;
 	}
 	return 0;
@@ -222,7 +221,7 @@ char *c_yandex_disk_url_to_ask_for_authorization_code(const char *client_id,  ch
 
 char *c_yandex_disk_get_token(const char *authorization_code, const char *client_id, const char *client_secret, const char *device_name, char **error){
 	if (authorization_code != NULL) {
-		ERROR_TO_POINTER(error, "No authorization_code.");
+		ERROR(error, "No authorization_code.");
 		return NULL;
 	}
 
@@ -244,7 +243,7 @@ char *c_yandex_disk_get_token(const char *authorization_code, const char *client
 	uuid4_seed(&state);
 	uuid4_gen(&state, &uuid);
 	if (!uuid4_to_s(uuid, device_uuid, 37)){
-		ERROR_TO_POINTER(error, "Can't genarate UUID");
+		ERROR(error, "Can't genarate UUID");
 		return NULL;
 	}
 	device_id = device_uuid;
@@ -291,7 +290,7 @@ char *c_yandex_disk_get_token(const char *authorization_code, const char *client
 		curl_easy_cleanup(curl);
 		curl_slist_free_all(header);
 		if (res) { //handle erros
-			ERROR_TO_POINTER(error, "CURL ERROR: %d", res);
+			ERROR(error, "CURL ERROR: %d", res);
 			free(s.ptr);
             return NULL;			
 		}		
@@ -303,11 +302,11 @@ char *c_yandex_disk_get_token(const char *authorization_code, const char *client
 			if (!access_token) { //handle errors
 				cJSON *error_description = cJSON_GetObjectItem(json, "error_description");
 				if (!error_description) {
-					ERROR_TO_POINTER(error, "UNKNOWN ERROR!"); //no error code in JSON answer
+					ERROR(error, "UNKNOWN ERROR!"); //no error code in JSON answer
 					cJSON_free(json);
 					return NULL;
 				}
-				ERROR_TO_POINTER(error, "CONNECTION ERROR: %s", error_description->valuestring);
+				ERROR(error, "CONNECTION ERROR: %s", error_description->valuestring);
 				cJSON_free(json);
 				return NULL;
 			}
@@ -433,7 +432,7 @@ int curl_upload_file(const char * filename, const char * url, void *user_data, i
 	return 0;
 }
 
-cJSON *c_yandex_disk_api(const char * token, const char * http_method, const char *api_suffix, char **error, ...)
+cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const char * token, char **error, ...)
 {
 	if (token == NULL) {
 		token=config->token;
@@ -487,7 +486,7 @@ cJSON *c_yandex_disk_api(const char * token, const char * http_method, const cha
 		curl_easy_cleanup(curl);
 		curl_slist_free_all(header);
 		if (res) { //handle erros
-			ERROR_TO_POINTER(error, "CURL ERROR: %d", res);
+			ERROR(error, "CURL ERROR: %d", res);
 			free(s.ptr);
             return NULL;			
 		}		
@@ -694,7 +693,7 @@ int _c_yandex_disk_standart_parser(cJSON *json, char **error){
 
 	if (!cJSON_GetObjectItem(json, "href")){ //error to get info
 		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		ERROR_TO_POINTER(error, "CONNECTION ERROR: %s", message->valuestring);
+		ERROR(error, "CONNECTION ERROR: %s", message->valuestring);
 		cJSON_free(json);
 		return  -1;		
 	}	
