@@ -109,6 +109,9 @@ int c_yandex_disk_ls_public(
 //create directory
 int c_yandex_disk_mkdir(const char * token, const char * path, char **error);
 
+//update resource data
+int c_yandex_disk_patch(const char * token, const char * path, const char *json_data, char **error);
+
 //copy file from to
 int c_yandex_disk_cp(
 		const char * token,		   //authorization token (pass NULL to use config file)

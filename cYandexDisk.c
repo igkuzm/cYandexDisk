@@ -256,7 +256,7 @@ int curl_upload_file(const char * filename, const char * url, void *user_data, i
 	return 0;
 }
 
-cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const char * token, char **error, ...)
+cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const char *body, const char * token, char **error, ...)
 {
 	char authorization[BUFSIZ];
 	sprintf(authorization, "Authorization: OAuth %s", token);
@@ -298,6 +298,11 @@ cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const
 
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
+
+		if (body) {
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(body));
+		}
 
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
 
@@ -403,7 +408,7 @@ int c_yandex_disk_upload_file(const char * token, const char * filename, const c
 	sprintf(path_arg, "path=%s", path);
 
 	char *error;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/upload", token, &error, path_arg, NULL);
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/upload", NULL, token, &error, path_arg, NULL);
 
 	return _c_yandex_disk_transfer_file_parser(json, FILE_UPLOAD, filename, error, user_data, callback, clientp, progress_callback);
 }
@@ -414,7 +419,7 @@ int c_yandex_disk_download_file(const char * token, const char * filename, const
 	sprintf(path_arg, "path=%s", path);
 
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/download", token, &error, path_arg, NULL);
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/download", NULL, token, &error, path_arg, NULL);
 	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, filename, error, user_data, callback, clientp, progress_callback);
 }
 
@@ -424,7 +429,7 @@ int c_yandex_disk_download_public_resource(const char * token, const char * file
 	sprintf(public_key_arg, "public_key=%s", public_key);	
 
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources/download", token, &error, public_key_arg, NULL);
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources/download", NULL, token, &error, public_key_arg, NULL);
 	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, filename, error, user_data, callback, clientp, progress_callback);
 }
 
@@ -494,7 +499,7 @@ int c_yandex_disk_ls(const char * token, const char * path, void * user_data, in
 	sprintf(path_arg, "path=%s", path);	
 
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources", token, &error, path_arg, NULL);
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources", NULL, token, &error, path_arg, NULL);
 	
 	return _c_yandex_disk_ls_parser(json, error, user_data, callback);
 }
@@ -502,7 +507,7 @@ int c_yandex_disk_ls(const char * token, const char * path, void * user_data, in
 int c_yandex_disk_ls_public(const char * token, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
 {
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/public", token, &error, NULL);
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/public", NULL, token, &error, NULL);
 	
 	return _c_yandex_disk_ls_parser(json, error, user_data, callback);
 }
@@ -528,7 +533,7 @@ int _c_yandex_disk_async_operation(const char * token, const char *operation_id,
 	sprintf(url_suffix, "v1/disk/operations/%s", operation_id);
 
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", url_suffix, token, &error, NULL);	
+	cJSON *json = c_yandex_disk_api("GET", url_suffix, NULL, token, &error, NULL);	
 
 	if (!json) { //no json returned
 		callback(user_data,STR("CONNECTION ERROR: %s", error));
@@ -606,7 +611,16 @@ int c_yandex_disk_mkdir(const char * token, const char * path, char **error)
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);	
 
-	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/resources", token, error, path_arg, NULL);
+	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/resources", NULL, token, error, path_arg, NULL);
+	return _c_yandex_disk_standart_parser(json, error);
+}
+
+int c_yandex_disk_patch(const char * token, const char * path, const char *json_data, char **error)
+{
+	char path_arg[BUFSIZ];
+	sprintf(path_arg, "path=%s", path);	
+
+	cJSON *json = c_yandex_disk_api("PATCH", "v1/disk/resources", json_data, token, error, path_arg, NULL);
 	return _c_yandex_disk_standart_parser(json, error);
 }
 
@@ -624,7 +638,7 @@ int c_yandex_disk_cp(const char * token, const char * from, const char * to, boo
 	char async_arg[] = "force_async=true";
 
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/copy", token, &error, from_arg, path_arg, overwrite_arg, async_arg, NULL);
+	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/copy", NULL, token, &error, from_arg, path_arg, overwrite_arg, async_arg, NULL);
 	if (error) callback(user_data, error);
 	return _c_yandex_disk_async_parser(json, token, user_data, callback);
 }
@@ -643,7 +657,7 @@ int c_yandex_disk_mv(const char * token, const char * from, const char * to, boo
 	char async_arg[] = "force_async=true";
 
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/move", token, &error, from_arg, path_arg, overwrite_arg, async_arg, NULL);
+	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/move", NULL, token, &error, from_arg, path_arg, overwrite_arg, async_arg, NULL);
 	if (error) callback(user_data, error);
 	return _c_yandex_disk_async_parser(json, token, user_data, callback);
 }
@@ -653,7 +667,7 @@ int c_yandex_disk_publish(const char * token, const char * path, char **error)
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);	
 
-	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/resources/publish", token, error, path_arg, NULL);
+	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/resources/publish", NULL, token, error, path_arg, NULL);
 	return _c_yandex_disk_standart_parser(json, error);
 }
 
@@ -662,7 +676,7 @@ int c_yandex_disk_unpublish(const char * token, const char * path, char **error)
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);	
 
-	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/resources/unpublish", token, error, path_arg, NULL);
+	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/resources/unpublish", NULL, token, error, path_arg, NULL);
 	return _c_yandex_disk_standart_parser(json, error);
 }
 
@@ -672,7 +686,7 @@ int c_yandex_disk_public_ls(const char * token, const char * public_key, void * 
 	sprintf(public_key_arg, "public_key=%s", public_key);	
 	
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources", token, &error, public_key_arg, NULL);
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources", NULL, token, &error, public_key_arg, NULL);
 	return _c_yandex_disk_ls_parser(json, error, user_data, callback);
 }
 
@@ -687,7 +701,7 @@ int c_yandex_disk_public_cp(const char * token, const char * public_key, const c
 	char async_arg[] = "force_async=true";
 
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/copy", token, &error, public_key_arg, save_path_arg, async_arg, NULL);
+	cJSON *json = c_yandex_disk_api("POST", "v1/disk/resources/copy", NULL, token, &error, public_key_arg, save_path_arg, async_arg, NULL);
 	if (error) callback(user_data, error);
 	return _c_yandex_disk_async_parser(json, token, user_data, callback);
 }
