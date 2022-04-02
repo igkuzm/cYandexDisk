@@ -14,7 +14,6 @@
 #include <string.h>
 #include "cJSON.h"
 #include "uuid4/uuid4.h"
-#include "config.h"
 #include <sys/_types/_va_list.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -54,134 +53,6 @@
 #define STRCOPY(str0, str1) ({size_t ___size = sizeof(str0); strncpy(str0, str1, ___size - 1); str0[___size - 1] = '\0';})
 
 
-static char config_path[BUFSIZ] = "cYandexDisk.cfg";
-static CONFIG * config;
-
-void c_yandex_disk_set_config_path(const char *_config_path){
-	strncpy(config_path, _config_path, BUFSIZ-1);
-	config_path[BUFSIZ-1] = '\0';
-}
-
-void c_yandex_disk_config_init(const char * config_file_path)
-{
-	if (config_file_path != NULL) c_yandex_disk_set_config_path(config_file_path);
-		
-	config = NEW(CONFIG);
-	config_init(config);
-	config_read(config, config_path);
-}
-
-void c_yandex_disk_set_client_id(const char *client_id){
-	if (config) {
-		config_set(config, client_id, client_id);
-		config->set |= CLIENT_ID_SET;
-		config_write(config, config_path);
-	}
-}
-
-void c_yandex_disk_set_client_secret(const char *client_secret){
-	if (config) {
-		config_set(config, client_secret, client_secret);
-		config->set |= CLIENT_SECRET_SET;
-		config_write(config, config_path);
-	}
-}
-
-void c_yandex_disk_set_device_name(const char *device_name){
-	if (config) {
-		config_set(config, device_name, device_name);
-		config->set |= DEVICE_NAME_SET;
-		config_write(config, config_path);
-	}
-}
-
-int c_yandex_disk_set_device_id(){
-	if (config) {
-		UUID4_STATE_T state;
-		UUID4_T uuid;
-
-		uuid4_seed(&state);
-		uuid4_gen(&state, &uuid);
-
-		if (!uuid4_to_s(uuid, config->device_id, 37)){
-			perror("Can't genarate UUID");
-			return -1;
-		}
-
-		config->set |= DEVICE_ID_SET;
-		config_write(config, config_path);
-
-		return 0;
-	}
-	
-	return -1;
-}
-
-void c_yandex_disk_set_token(const char *token){
-	if (config) {
-		config_set(config, token, token);
-		config->set |= TOKEN_SET;
-		config_write(config, config_path);
-	}
-}
-
-
-int check_no_config(char **error){
-	if (!config) {
-		ERROR(error, "Error. c_yandex_disk is not initilized, you should run c_yandex_disk_init()\n");
-		return -1;
-	}	
-	return 0;
-}
-
-int check_no_client_id(char **error){
-	if (check_no_config(error))	return -1;
-	if (!(config->set & CLIENT_ID_SET)) {
-		ERROR(error, "Error. Client id is not set. You should run c_yandex_disk_set_client_id(client_id)\n");	
-		return -1;
-	}
-	return 0;
-}
-
-int check_no_client_secret(char **error){
-	if (check_no_config(error))	return -1;
-	if (!(config->set & CLIENT_SECRET_SET)) {
-		ERROR(error, "Error. Client secret is not set. You should run c_yandex_disk_set_client_secret(client_secret)\n");	
-		return -1;
-	}
-	return 0;
-}
-
-int check_no_client_device_name(char **error){
-	if (check_no_config(error))	return -1;
-	if (!(config->set & DEVICE_NAME_SET)) {
-		ERROR(error, "Error. Device name is not set. You should run c_yandex_disk_set_device_name(device_name)\n");	
-		return -1;
-	}
-	return 0;
-}
-
-int check_no_client_device_id(char **error){
-	if (config) {
-		if (!(config->set & DEVICE_ID_SET)) {
-			if (c_yandex_disk_set_device_id()){
-				ERROR(error, "Error. Device id is not set. Can't set UUID\n");	
-				return -1;
-			}
-		}
-	}
-	return 0;
-}
-
-int check_no_token(char **error){
-	if (check_no_config(error))	return -1;
-	if (!(config->set & TOKEN_SET)) {
-		ERROR(error, "Error. Token is not set. You should get token from Yandex. Get authorization code first: open URL c_yandex_disk_ask_for_authorization_code(&error) to enable access of application and get code. Then get token with c_yandex_disk_get_token(authorization_code, &error)\n");	
-		return -1;
-	}
-	return 0;
-}
-
 struct string {
 	char *ptr;
 	size_t len;
@@ -206,11 +77,6 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s)
 
 char *c_yandex_disk_url_to_ask_for_authorization_code(const char *client_id,  char **error) {
 	
-	if (client_id == NULL) {
-		if (check_no_client_id(error))	return NULL;
-		client_id = config->client_id; 
-	}
-
 	char *requestString = MALLOC(BUFSIZ);
 	
 	sprintf(requestString, "\"https://oauth.yandex.ru/authorize?response_type=code");	
@@ -225,34 +91,15 @@ char *c_yandex_disk_get_token(const char *authorization_code, const char *client
 		return NULL;
 	}
 
-	if (client_id == NULL) {
-		if (check_no_client_id(error))			return NULL;
-		client_id = config->client_id; 
-	}
-	if (client_secret == NULL) {
-		if (check_no_client_secret(error))		return NULL;
-		client_secret = config->client_secret;
-	}
-	if (device_name == NULL) {	
-		if (check_no_client_device_name(error))	return NULL;
-		device_name = config->device_name;
-	}
-	char *device_id; 
-	char device_uuid[37];
+	char device_id[37];
 	UUID4_STATE_T state; UUID4_T uuid;
 	uuid4_seed(&state);
 	uuid4_gen(&state, &uuid);
-	if (!uuid4_to_s(uuid, device_uuid, 37)){
+	if (!uuid4_to_s(uuid, device_id, 37)){
 		ERROR(error, "Can't genarate UUID");
 		return NULL;
 	}
-	device_id = device_uuid;
 	
-	if (device_name == NULL) {	
-		if (check_no_client_device_id(error))	    return NULL;
-		device_id = config->device_id;
-	}
-
 	CURL *curl = curl_easy_init();
 		
 	struct string s;
@@ -314,8 +161,6 @@ char *c_yandex_disk_get_token(const char *authorization_code, const char *client
 			char * token = MALLOC(BUFSIZ);
 			strncpy(token, access_token->valuestring, BUFSIZ - 1);	
 			token[BUFSIZ - 1] = '\0';
-			if (config)
-				c_yandex_disk_set_token(access_token->valuestring);
 			cJSON_free(json);
 			return token;
 		}	
@@ -434,10 +279,6 @@ int curl_upload_file(const char * filename, const char * url, void *user_data, i
 
 cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const char * token, char **error, ...)
 {
-	if (token == NULL) {
-		token=config->token;
-		if (check_no_token(error)) return NULL;
-	}
 	char authorization[BUFSIZ];
 	sprintf(authorization, "Authorization: OAuth %s", token);
 

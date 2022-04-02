@@ -25,24 +25,6 @@ typedef struct c_yd_file_t {
 } c_yd_file_t;
 
 
-/*
- * It is able to use API with config file or not
- */
-
-//init API. To use default config file (pwd/cYandexDisk.cfg) pass NULL
-void c_yandex_disk_config_init(const char * config_file_path);
-//set config client_id (id of application in Yandex - to )
-void c_yandex_disk_set_client_id(const char *client_id);
-//set config client_secret (secret of application in Yandex)
-void c_yandex_disk_set_client_secret(const char *client_secret);
-//device name
-void c_yandex_disk_set_device_name(const char *device_name);
-//device id - generated uuid string
-int  c_yandex_disk_set_device_id();
-
-//set token in config
-void c_yandex_disk_set_token(const char *token);
-
 //get URL with authoization code request
 char *c_yandex_disk_url_to_ask_for_authorization_code(
 		const char *client_id,    //id of application in Yandex (pass NULL to use config file)
