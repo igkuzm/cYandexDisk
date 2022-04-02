@@ -142,7 +142,7 @@ char *c_yandex_disk_get_token(const char *authorization_code, const char *client
             return NULL;			
 		}		
 		//parse JSON answer
-		cJSON *json = cJSON_Parse(s.ptr);
+		cJSON *json = cJSON_ParseWithLength(s.ptr, s.len);
 		free(s.ptr);
 		if (cJSON_IsObject(json)) {
 			cJSON *access_token = cJSON_GetObjectItem(json, "access_token");			
@@ -332,7 +332,7 @@ cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const
             return NULL;			
 		}		
 		//parse JSON answer
-		cJSON *json = cJSON_Parse(s.ptr);
+		cJSON *json = cJSON_ParseWithLength(s.ptr, s.len);
 		free(s.ptr);		
 
 		return json;
