@@ -66,7 +66,7 @@ char *c_yandex_disk_url_to_ask_for_authorization_code(const char *client_id,  ch
 
 char *c_yandex_disk_get_token(const char *authorization_code, const char *client_id, const char *client_secret, const char *device_name, char **error){
 	if (authorization_code != NULL) {
-		ERROR(error, "No authorization_code.");
+		ERROR(error, "cYandexDisk: No authorization_code.");
 		return NULL;
 	}
 
@@ -75,7 +75,7 @@ char *c_yandex_disk_get_token(const char *authorization_code, const char *client
 	uuid4_seed(&state);
 	uuid4_gen(&state, &uuid);
 	if (!uuid4_to_s(uuid, device_id, 37)){
-		ERROR(error, "Can't genarate UUID");
+		ERROR(error, "cYandexDisk: Can't genarate UUID");
 		return NULL;
 	}
 	
@@ -116,7 +116,7 @@ char *c_yandex_disk_get_token(const char *authorization_code, const char *client
 		curl_easy_cleanup(curl);
 		curl_slist_free_all(header);
 		if (res) { //handle erros
-			ERROR(error, "CURL ERROR: %d", res);
+			ERROR(error, "cYandexDisk: curl returned error: %d", res);
 			free(s.ptr);
             return NULL;			
 		}		
@@ -128,11 +128,11 @@ char *c_yandex_disk_get_token(const char *authorization_code, const char *client
 			if (!access_token) { //handle errors
 				cJSON *error_description = cJSON_GetObjectItem(json, "error_description");
 				if (!error_description) {
-					ERROR(error, "UNKNOWN ERROR!"); //no error code in JSON answer
+					ERROR(error, "cYandexDisk: unknown error!"); //no error code in JSON answer
 					cJSON_free(json);
 					return NULL;
 				}
-				ERROR(error, "CONNECTION ERROR: %s", error_description->valuestring);
+				ERROR(error, "cYandexDisk: %s", error_description->valuestring);
 				cJSON_free(json);
 				return NULL;
 			}
@@ -153,7 +153,7 @@ int curl_download_file(const char * filename, const char * url, void * user_data
 	
 	fd = fopen(filename, "wb"); /* open file to download */
 	if(!fd){
-		callback(0,user_data, STR("Error download file. Can't open destination file\n"));
+		callback(0,user_data, STR("cYandexDisk: Error download file. Can't open destination file\n"));
 		return 1; /* cannot continue */
 	}
     
@@ -179,7 +179,7 @@ int curl_download_file(const char * filename, const char * url, void * user_data
         fclose(fd);
 
 		if(res != CURLE_OK) {
-			callback(0,user_data, STR("curl_easy_perform() failed: %s\n", curl_easy_strerror(res)));
+			callback(0,user_data, STR("cYandexDisk: curl_easy_perform() failed: %s\n", curl_easy_strerror(res)));
 			curl_easy_cleanup(curl);
 			return -1;
 		} else {
@@ -239,7 +239,7 @@ int curl_upload_file(const char * filename, const char * url, void *user_data, i
 		res = curl_easy_perform(curl);
 		/* Check for errors */
 		if(res != CURLE_OK) {
-			callback(0,user_data, STR("curl_easy_perform() failed: %s\n", curl_easy_strerror(res)));
+			callback(0,user_data, STR("cYandexDisk: curl_easy_perform() failed: %s\n", curl_easy_strerror(res)));
 			curl_easy_cleanup(curl);
 			return -1;
 		}
@@ -311,7 +311,7 @@ cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const
 		curl_easy_cleanup(curl);
 		curl_slist_free_all(header);
 		if (res) { //handle erros
-			ERROR(error, "CURL ERROR: %d", res);
+			ERROR(error, "cYandexDisk: curl returned error: %d", res);
 			free(s.ptr);
             return NULL;			
 		}		
@@ -361,13 +361,13 @@ void *curl_transfer_file_in_thread(void *_params)
 int _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfer, const char *filename, char *error, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	if (!json) {
-		callback(0,user_data,STR("CONNECTION ERROR: %s", error));
+		callback(0,user_data,STR("cYandexDisk: %s", error));
 		return -1;
 	}
 	cJSON *url = cJSON_GetObjectItem(json, "href");			
 	if (!url) {
 		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		callback(0,user_data,STR("CONNECTION ERROR: %s", message->valuestring));
+		callback(0,user_data,STR("cYandexDisk: %s", message->valuestring));
 		cJSON_free(json);
 		return  -1;
 	}
@@ -465,12 +465,12 @@ int c_json_to_c_yd_file_t(cJSON *json, c_yd_file_t *file)
 int _c_yandex_disk_ls_parser(cJSON *json, char *error, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
 {
 	if (!json) { //no json returned
-		callback(NULL,user_data,STR("CONNECTION ERROR: %s", error));
+		callback(NULL,user_data,STR("cYandexDisk: %s", error));
 		return -1;
 	}
 	if (!cJSON_GetObjectItem(json, "path")){ //error to get info of file/directory
 		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		callback(NULL,user_data,STR("CONNECTION ERROR: %s", message->valuestring));
+		callback(NULL,user_data,STR("cYandexDisk: %s", message->valuestring));
 		cJSON_free(json);
 		return  -1;
 	}	
@@ -518,7 +518,7 @@ int _c_yandex_disk_standart_parser(cJSON *json, char **error){
 
 	if (!cJSON_GetObjectItem(json, "href") && !cJSON_GetObjectItem(json, "path")){ //error to get info
 		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		ERROR(error, "CONNECTION ERROR: %s", message->valuestring);
+		ERROR(error, "cYandexDisk: %s", message->valuestring);
 		cJSON_free(json);
 		return  -1;		
 	}	
@@ -536,12 +536,12 @@ int _c_yandex_disk_async_operation(const char * token, const char *operation_id,
 	cJSON *json = c_yandex_disk_api("GET", url_suffix, NULL, token, &error, NULL);	
 
 	if (!json) { //no json returned
-		callback(user_data,STR("CONNECTION ERROR: %s", error));
+		callback(user_data,STR("cYandexDisk: %s", error));
 		return -1;
 	}
 	if (!cJSON_GetObjectItem(json, "href")){ //error to get info
 		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		callback(user_data,STR("CONNECTION ERROR: %s", message->valuestring));
+		callback(user_data,STR("cYandexDisk: %s", message->valuestring));
 		cJSON_free(json);
 		return  -1;
 	}	
@@ -571,7 +571,7 @@ int _c_yandex_disk_async_parser(cJSON *json, const char * token, void *user_data
 	cJSON *operation_id = cJSON_GetObjectItem(json, "href"); 
 	if (!operation_id){ //error to get info
 		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		callback(user_data, STR("CONNECTION ERROR: %s", message->valuestring));
+		callback(user_data, STR("cYandexDisk: %s", message->valuestring));
 		cJSON_free(json);
 		return  -1;		
 	}	
