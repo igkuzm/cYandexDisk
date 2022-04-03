@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 29.03.2022
- * Last Modified Date: 02.04.2022
+ * Last Modified Date: 03.04.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -194,6 +194,21 @@ int curl_download_file(const char * filename, const char * url, void * user_data
     return 0;
 }
 
+size_t readfunc(char *ptr, size_t size, size_t nmemb, void *userdata)
+{
+	FILE *readhere = (FILE *)userdata;
+	curl_off_t nread;
+
+	/* copy as much data as possible into the 'ptr' buffer, but no more than
+	 'size' * 'nmemb' bytes! */
+	size_t retcode = fread(ptr, size, nmemb, readhere);
+
+	nread = (curl_off_t)retcode;
+
+	fprintf(stderr, "*** We read %" CURL_FORMAT_CURL_OFF_T " bytes from file\n", nread);
+	return retcode;
+}
+
 int curl_upload_file(const char * filename, const char * url, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	CURL *curl;
@@ -223,6 +238,7 @@ int curl_upload_file(const char * filename, const char * url, void *user_data, i
 
 		/* set where to read from (on Windows you need to use READFUNCTION too) */
 		curl_easy_setopt(curl, CURLOPT_READDATA, fd);
+		curl_easy_setopt(curl, CURLOPT_READFUNCTION, readfunc);
 
 		/* and give the size of the upload (optional) */
 		curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, (curl_off_t)file_info.st_size);
