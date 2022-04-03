@@ -505,6 +505,7 @@ void *curl_transfer_file_in_thread(void *_params)
 			break;			
 		case DATA_UPLOAD :
 			curl_upload_data(params->data, params->size, params->url, params->user_data, params->callback, params->clientp, params->progress_callback);
+			break;
 		case DATA_DOWNLOAD :
 			curl_download_data(params->url, params->user_data, params->callback_data, params->clientp, params->progress_callback);			
 			break;			
