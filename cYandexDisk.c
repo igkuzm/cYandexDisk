@@ -631,6 +631,15 @@ int c_yandex_disk_mkdir(const char * token, const char * path, char **error)
 	return _c_yandex_disk_standart_parser(json, error);
 }
 
+int c_yandex_disk_rm(const char * token, const char * path, char **error)
+{
+	char path_arg[BUFSIZ];
+	sprintf(path_arg, "path=%s", path);	
+
+	cJSON *json = c_yandex_disk_api("DELETE", "v1/disk/resources", NULL, token, error, path_arg, NULL);
+	return _c_yandex_disk_standart_parser(json, error);
+}
+
 int c_yandex_disk_patch(const char * token, const char * path, const char *json_data, char **error)
 {
 	char path_arg[BUFSIZ];

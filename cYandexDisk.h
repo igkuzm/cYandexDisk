@@ -2,7 +2,7 @@
  * File              : cYandexDisk.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 29.03.2022
- * Last Modified Date: 02.04.2022
+ * Last Modified Date: 03.04.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -108,6 +108,9 @@ int c_yandex_disk_ls_public(
 
 //create directory
 int c_yandex_disk_mkdir(const char * token, const char * path, char **error);
+
+//remove file/directory
+int c_yandex_disk_rm(const char * token, const char * path, char **error);
 
 //update resource data
 int c_yandex_disk_patch(const char * token, const char * path, const char *json_data, char **error);
