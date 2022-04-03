@@ -194,6 +194,64 @@ int curl_download_file(const char * filename, const char * url, void * user_data
     return 0;
 }
 
+struct curl_download_data_t {
+	void *data;
+	size_t size;
+};
+
+size_t curl_download_data_writefunc(void *ptr, size_t size, size_t nmemb, struct curl_download_data_t *t)
+{
+	size_t new_len = t->size + size*nmemb;
+	t->data = REALLOC(t->data, new_len);
+	memcpy(t->data+t->size, ptr, size*nmemb);
+	t->size = new_len;
+
+	return size*nmemb;
+}
+
+size_t curl_download_data(const char * url, void * user_data, int (*callback)(size_t size, void *data, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow)) 
+{
+	CURL *curl;
+    CURLcode res;
+
+	struct curl_download_data_t t;
+	t.data = MALLOC(1);
+	t.size = 0;
+
+    curl = curl_easy_init();
+    if (curl) {
+		
+        curl_easy_setopt(curl, CURLOPT_URL, url);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &t);
+		/* enable verbose for easier tracing */
+		/*curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);*/
+		/* example.com is redirected, so we tell libcurl to follow redirection */
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);		
+		if (progress_callback) {
+			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, clientp);
+			curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
+			curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
+		}
+			
+        res = curl_easy_perform(curl);
+
+		if(res != CURLE_OK) {
+			callback(0,NULL,user_data, STR("cYandexDisk: curl_easy_perform() failed: %s\n", curl_easy_strerror(res)));
+			curl_easy_cleanup(curl);
+			return -1;
+		} else {
+			/* now extract transfer info */
+			curl_off_t size;
+			curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &size);
+			callback(size, t.data, user_data, NULL);
+		}	
+        /* always cleanup */
+		curl_easy_cleanup(curl);
+    }
+    return t.size;
+}
+
 size_t readfunc(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
 	FILE *readhere = (FILE *)userdata;
@@ -417,7 +475,8 @@ cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const
 typedef enum {
 	FILE_DOWNLOAD,
 	FILE_UPLOAD,
-	DATA_UPLOAD
+	DATA_UPLOAD,
+	DATA_DOWNLOAD
 } FILE_TRANSFER;
 
 struct curl_transfer_file_in_thread_params {
@@ -426,6 +485,7 @@ struct curl_transfer_file_in_thread_params {
 	char url[BUFSIZ];
 	void *user_data;
 	int (*callback)(size_t size, void *user_data, char *error);
+	int (*callback_data)(size_t size, void *data, void *user_data, char *error);
 	void *clientp;
 	int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow);
 	void *data;
@@ -445,6 +505,8 @@ void *curl_transfer_file_in_thread(void *_params)
 			break;			
 		case DATA_UPLOAD :
 			curl_upload_data(params->data, params->size, params->url, params->user_data, params->callback, params->clientp, params->progress_callback);
+		case DATA_DOWNLOAD :
+			curl_download_data(params->url, params->user_data, params->callback_data, params->clientp, params->progress_callback);			
 			break;			
 	}
 
@@ -452,7 +514,7 @@ void *curl_transfer_file_in_thread(void *_params)
 	pthread_exit(0);
 }
 
-int _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfer, const char *filename, void * data, size_t size, char *error, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
+int _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfer, const char *filename, void * data, size_t size, char *error, void *user_data, int (*callback)(size_t size, void *user_data, char *error), int (*callback_data)(size_t size, void *data, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	if (!json) {
 		callback(0,user_data,STR("cYandexDisk: %s", error));
@@ -488,6 +550,7 @@ int _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfer
 	params->progress_callback = progress_callback;
 	params->data = data;
 	params->size = size;
+	params->callback_data = callback_data;
 	//создаем новый поток
 	err = pthread_create(&tid,&attr, curl_transfer_file_in_thread, params);
 	if (err) {
@@ -531,7 +594,7 @@ int c_yandex_disk_upload_file(const char * token, const char * filename, const c
 	char *error;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/upload", NULL, token, &error, path_arg, NULL);
 
-	return _c_yandex_disk_transfer_file_parser(json, FILE_UPLOAD, filename, NULL, 0, error, user_data, callback, clientp, progress_callback);
+	return _c_yandex_disk_transfer_file_parser(json, FILE_UPLOAD, filename, NULL, 0, error, user_data, callback, NULL, clientp, progress_callback);
 }
 
 int c_yandex_disk_upload_data(const char * token, void * data, size_t size, const char * path, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
@@ -542,7 +605,7 @@ int c_yandex_disk_upload_data(const char * token, void * data, size_t size, cons
 	char *error;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/upload", NULL, token, &error, path_arg, NULL);
 
-	return _c_yandex_disk_transfer_file_parser(json, DATA_UPLOAD, NULL, data, size, error, user_data, callback, clientp, progress_callback);
+	return _c_yandex_disk_transfer_file_parser(json, DATA_UPLOAD, NULL, data, size, error, user_data, callback, NULL, clientp, progress_callback);
 }
 
 int c_yandex_disk_download_file(const char * token, const char * filename, const char * path, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
@@ -552,7 +615,17 @@ int c_yandex_disk_download_file(const char * token, const char * filename, const
 
 	char *error = NULL;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/download", NULL, token, &error, path_arg, NULL);
-	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, filename, NULL, 0, error, user_data, callback, clientp, progress_callback);
+	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, filename, NULL, 0, error, user_data, callback, NULL, clientp, progress_callback);
+}
+
+int c_yandex_disk_download_data(const char * token, const char * path, void *user_data, int (*callback)(size_t size, void *data, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
+{
+	char path_arg[BUFSIZ];
+	sprintf(path_arg, "path=%s", path);
+
+	char *error = NULL;
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/download", NULL, token, &error, path_arg, NULL);
+	return _c_yandex_disk_transfer_file_parser(json, DATA_DOWNLOAD, NULL, NULL, 0, error, user_data, NULL, callback, clientp, progress_callback);
 }
 
 int c_yandex_disk_download_public_resource(const char * token, const char * filename, const char * public_key, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
@@ -562,7 +635,7 @@ int c_yandex_disk_download_public_resource(const char * token, const char * file
 
 	char *error = NULL;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources/download", NULL, token, &error, public_key_arg, NULL);
-	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, filename, NULL, 0, error, user_data, callback, clientp, progress_callback);
+	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, filename, NULL, 0, error, user_data, callback, NULL, clientp, progress_callback);
 }
 
 int c_json_to_c_yd_file_t(cJSON *json, c_yd_file_t *file)
