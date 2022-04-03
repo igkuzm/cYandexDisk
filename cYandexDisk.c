@@ -418,6 +418,31 @@ int _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfer
 	return 0;
 }
 
+char *
+c_yandex_disk_file_url(const char * token, const char * path, char **error)
+{
+	char path_arg[BUFSIZ];
+	sprintf(path_arg, "path=%s", path);
+
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/download", NULL, token, error, path_arg, NULL);
+	if (!json) //no json returned
+		return NULL;
+
+	cJSON *href = cJSON_GetObjectItem(json, "href");
+	if (!href){ //error to get info
+		cJSON *message = cJSON_GetObjectItem(json, "message");			
+		ERROR(error, "cYandexDisk: %s", message->valuestring);
+		cJSON_free(json);
+		return  NULL;		
+	}	
+	size_t size = strlen(href->valuestring);
+	char *url = MALLOC(BUFSIZ);
+	strncpy(url, href->valuestring, size);
+	url[size] = '\0';
+	cJSON_free(json);
+	return url;
+}
+
 int c_yandex_disk_upload_file(const char * token, const char * filename, const char * path, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	char path_arg[BUFSIZ];

@@ -106,6 +106,9 @@ int c_yandex_disk_ls_public(
 		)
 );
 
+//get url of file
+char *c_yandex_disk_file_url(const char * token, const char * path, char **error);
+
 //create directory
 int c_yandex_disk_mkdir(const char * token, const char * path, char **error);
 
