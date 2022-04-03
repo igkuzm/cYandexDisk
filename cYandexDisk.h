@@ -62,6 +62,28 @@ int c_yandex_disk_upload_file(
 		)
 );
 
+//upload data to Yandex Disk
+int c_yandex_disk_upload_data(
+		const char * token,		   //authorization token (pass NULL to use config file)
+		void * data,			   //data to upload
+		size_t size,			   //data size
+		const char * path,         //path in yandex disk to save file - start with app:/
+		void *user_data,           //pointer of data to transfer throw callback
+		int (*callback)(		   //callback function when upload finished 
+			size_t size,           //size of uploaded file
+			void *user_data,       //pointer of data return from callback
+			char *error			   //error
+		), 
+		void *clientp,			   //data pointer to transfer trow progress callback
+		int (*progress_callback)(  //progress callback function
+			void *clientp,		   //data pointer return from progress function
+			double dltotal,        //downloaded total size
+			double dlnow,		   //downloaded size
+			double ultotal,        //uploaded total size
+			double ulnow           //uploaded size
+		)
+);
+
 //Download file from Yandex Disk
 int c_yandex_disk_download_file(             
 		const char * token,		   //authorization token (pass NULL to use config file)
