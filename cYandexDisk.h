@@ -57,6 +57,7 @@ int c_yandex_disk_upload_file(
 		const char * token,		   //authorization token (pass NULL to use config file)
 		const char * filename,     //filename to upload
 		const char * path,         //path in yandex disk to save file - start with app:/
+		bool overwrite,			   //overwrite distination 
 		void *user_data,           //pointer of data to transfer throw callback
 		int (*callback)(		   //callback function when upload finished 
 			size_t size,           //size of uploaded file
@@ -79,6 +80,7 @@ int c_yandex_disk_upload_data(
 		void * data,			   //data to upload
 		size_t size,			   //data size
 		const char * path,         //path in yandex disk to save file - start with app:/
+		bool overwrite,			   //overwrite distination 
 		void *user_data,           //pointer of data to transfer throw callback
 		int (*callback)(		   //callback function when upload finished 
 			size_t size,           //size of uploaded file
