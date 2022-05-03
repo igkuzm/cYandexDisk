@@ -1,11 +1,10 @@
 /**
  * File              : cYandexDisk.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
- * Date              : 29.03.2022
+ * Date              : 03.05.2022
  * Last Modified Date: 03.05.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
-
 /*
  * C API for Yandex Disk
  */
@@ -74,6 +73,28 @@ int c_yandex_disk_upload_file(
 		)
 );
 
+//upload data to Yandex Disk
+int c_yandex_disk_upload_data(
+		const char * token,		   //authorization token (pass NULL to use config file)
+		void * data,			   //data to upload
+		size_t size,			   //data size
+		const char * path,         //path in yandex disk to save file - start with app:/
+		void *user_data,           //pointer of data to transfer throw callback
+		int (*callback)(		   //callback function when upload finished 
+			size_t size,           //size of uploaded file
+			void *user_data,       //pointer of data return from callback
+			char *error			   //error
+		), 
+		void *clientp,			   //data pointer to transfer trow progress callback
+		int (*progress_callback)(  //progress callback function
+			void *clientp,		   //data pointer return from progress function
+			double dltotal,        //downloaded total size
+			double dlnow,		   //downloaded size
+			double ultotal,        //uploaded total size
+			double ulnow           //uploaded size
+		)
+);
+
 //Download file from Yandex Disk
 int c_yandex_disk_download_file(             
 		const char * token,		   //authorization token (pass NULL to use config file)
@@ -82,6 +103,27 @@ int c_yandex_disk_download_file(
 		void *user_data,           //pointer of data to transfer throw callback
 		int (*callback)(		   //callback function when upload finished 
 			size_t size,           //size of downloaded file
+			void *user_data,       //pointer of data return from callback
+			char *error			   //error
+		), 
+		void *clientp,			   //data pointer to transfer trow progress callback
+		int (*progress_callback)(  //progress callback function
+			void *clientp,		   //data pointer return from progress function
+			double dltotal,        //downloaded total size
+			double dlnow,		   //downloaded size
+			double ultotal,        //uploaded total size
+			double ulnow           //uploaded size
+		)
+);
+
+//Download data from Yandex Disk - return data size
+int c_yandex_disk_download_data(             
+		const char * token,		   //authorization token (pass NULL to use config file)
+		const char * path,         //path in yandex disk of file to download - start with app:/
+		void *user_data,           //pointer of data to transfer throw callback
+		int (*callback)(		   //callback function when upload finished 
+			size_t size,           //size of downloaded data
+			void *data,			   //pointer of downloaded data
 			void *user_data,       //pointer of data return from callback
 			char *error			   //error
 		), 
@@ -118,8 +160,14 @@ int c_yandex_disk_ls_public(
 		)
 );
 
+//get url of file
+char *c_yandex_disk_file_url(const char * token, const char * path, char **error);
+
 //create directory
 int c_yandex_disk_mkdir(const char * token, const char * path, char **error);
+
+//remove file/directory
+int c_yandex_disk_rm(const char * token, const char * path, char **error);
 
 //update resource data
 int c_yandex_disk_patch(const char * token, const char * path, const char *json_data, char **error);
