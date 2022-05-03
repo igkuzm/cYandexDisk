@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 29.03.2022
- * Last Modified Date: 02.04.2022
+ * Last Modified Date: 03.05.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <time.h>
 
 #define API_URL "https://cloud-api.yandex.net"
 #define VERIFY_SSL 0
@@ -435,29 +436,53 @@ int c_yandex_disk_download_public_resource(const char * token, const char * file
 
 int c_json_to_c_yd_file_t(cJSON *json, c_yd_file_t *file)
 {
+	file->name[0] = '\0';
 	cJSON *name = cJSON_GetObjectItem(json, "name");	
 	if (name) STRCOPY(file->name, name->valuestring);
 
+	file->type[0] = '\0';
 	cJSON *type = cJSON_GetObjectItem(json, "type");	
 	if (type) STRCOPY(file->type, type->valuestring);	
 
+	file->path[0] = '\0';
 	cJSON *path = cJSON_GetObjectItem(json, "path");	
 	if (path) STRCOPY(file->path, path->valuestring);	
 
+	file->mime_type[0] = '\0';
 	cJSON *mime_type = cJSON_GetObjectItem(json, "mime_type");	
 	if (mime_type) STRCOPY(file->mime_type, mime_type->valuestring);	
 
+	file->size = 0;
 	cJSON *size = cJSON_GetObjectItem(json, "size");	
 	if (size) file->size = size->valueint;	
 
+	file->preview[0] = '\0';
 	cJSON *preview = cJSON_GetObjectItem(json, "preview");	
 	if (preview) STRCOPY(file->preview, preview->valuestring);	
 
+	file->public_key[0] = '\0';
 	cJSON *public_key = cJSON_GetObjectItem(json, "public_key");	
 	if (public_key) STRCOPY(file->public_key, public_key->valuestring);	
 	
+	file->public_url[0] = '\0';
 	cJSON *public_url = cJSON_GetObjectItem(json, "public_url");	
 	if (public_url) STRCOPY(file->public_url, public_url->valuestring);	
+
+	file->modified = 0;
+	cJSON *modified = cJSON_GetObjectItem(json, "modified");	
+	if (modified) {
+		struct tm tm = {0};
+		strptime(modified->valuestring, "%FT%T%z", &tm);
+		file->modified = mktime(&tm);
+	}	
+
+	file->created = 0;
+	cJSON *created = cJSON_GetObjectItem(json, "created");	
+	if (created) {
+		struct tm tm = {0};
+		strptime(modified->valuestring, "%FT%T%z", &tm);
+		file->created = mktime(&tm);
+	}		
 	
 	return 0;
 }
@@ -492,6 +517,37 @@ int _c_yandex_disk_ls_parser(cJSON *json, char *error, void * user_data, int(*ca
 
 	return 0;
 }	
+
+c_yd_file_t *
+c_yandex_disk_file_info(
+		const char * token, 
+		const char * path,
+		c_yd_file_t *file,
+		char **_error
+		)
+{
+	char path_arg[BUFSIZ];
+	sprintf(path_arg, "path=%s", path);	
+
+	char *error = NULL;
+	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources", NULL, token, &error, path_arg, NULL);
+	if (error) {
+		ERROR(_error, "%s", error);
+	}
+
+	if (!json) { //no json returned
+		return NULL;
+	}
+	if (!cJSON_GetObjectItem(json, "path")){ //error to get info of file/directory
+		cJSON *message = cJSON_GetObjectItem(json, "error");
+		ERROR(_error, "%s", message->valuestring);
+		cJSON_free(json);
+		return NULL;
+	}	
+	
+	c_json_to_c_yd_file_t(json, file);
+	return file;
+}
 
 int c_yandex_disk_ls(const char * token, const char * path, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
 {

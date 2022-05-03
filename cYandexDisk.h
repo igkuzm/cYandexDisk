@@ -2,7 +2,7 @@
  * File              : cYandexDisk.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 29.03.2022
- * Last Modified Date: 02.04.2022
+ * Last Modified Date: 03.05.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <time.h>
 
 typedef struct c_yd_file_t {
 	char   name[256];			//name of resource
@@ -19,6 +20,8 @@ typedef struct c_yd_file_t {
 	char   path[BUFSIZ];		//path of resource in disk
 	char   mime_type[64];		
 	size_t size;
+	time_t created;
+	time_t modified;
 	char   preview[BUFSIZ];		//url of preview
 	char   public_key[BUFSIZ];
 	char   public_url[BUFSIZ];
@@ -39,6 +42,15 @@ char *c_yandex_disk_get_token(
 		const char *device_name,  //device name	(pass NULL to use config file)
 		char **error
 );
+
+//get info of file/directory
+c_yd_file_t *
+c_yandex_disk_file_info(
+		const char * token, 
+		const char * path,
+		c_yd_file_t *file,
+		char **_error
+		);
 
 
 //upload file to Yandex Disk
