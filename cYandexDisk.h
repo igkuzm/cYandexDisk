@@ -8,6 +8,9 @@
 /*
  * C API for Yandex Disk
  */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -252,3 +255,6 @@ int c_yandex_disk_public_cp(
 );
 
 
+#ifdef __cplusplus
+}  /* end of the 'extern "C"' block */
+#endif
