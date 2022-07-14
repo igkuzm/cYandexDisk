@@ -37,18 +37,25 @@ char *c_yandex_disk_url_to_ask_for_authorization_code(
 );
 
 //get authorization token
-char *c_yandex_disk_get_token(
+void c_yandex_disk_get_token(
 		const char *authorization_code, 
 		const char *client_id,    //id of application in Yandex
 		const char *client_secret,//secret of application in Yandex
 		const char *device_name,  //device name
-		char **error
+		void * user_data,
+		int (*callback)(
+			void * user_data,
+			char * access_token,
+			time_t expires_in,
+			char * refresh_token,
+			char * error
+			)
 );
 
 //get info of file/directory
 c_yd_file_t *
 c_yandex_disk_file_info(
-		const char * token, 
+		const char * access_token, 
 		const char * path,
 		c_yd_file_t *file,
 		char **_error
@@ -57,7 +64,7 @@ c_yandex_disk_file_info(
 
 //upload file to Yandex Disk
 int c_yandex_disk_upload_file(
-		const char * token,		   //authorization token
+		const char * access_token, //authorization token
 		const char * filename,     //filename to upload
 		const char * path,         //path in yandex disk to save file - start with app:/
 		bool overwrite,			   //overwrite distination 
@@ -79,7 +86,7 @@ int c_yandex_disk_upload_file(
 
 //upload data to Yandex Disk
 int c_yandex_disk_upload_data(
-		const char * token,		   //authorization token
+		const char * access_token, //authorization token
 		void * data,			   //data to upload
 		size_t size,			   //data size
 		const char * path,         //path in yandex disk to save file - start with app:/
@@ -102,7 +109,7 @@ int c_yandex_disk_upload_data(
 
 //Download file from Yandex Disk
 int c_yandex_disk_download_file(             
-		const char * token,		   //authorization token
+		const char * access_token, //authorization token
 		const char * filename,     //filename to save downloaded file
 		const char * path,         //path in yandex disk of file to download - start with app:/
 		void *user_data,           //pointer of data to transfer throw callback
@@ -123,7 +130,7 @@ int c_yandex_disk_download_file(
 
 //Download data from Yandex Disk - return data size
 int c_yandex_disk_download_data(             
-		const char * token,		   //authorization token
+		const char * access_token, //authorization token
 		const char * path,         //path in yandex disk of file to download - start with app:/
 		void *user_data,           //pointer of data to transfer throw callback
 		int (*callback)(		   //callback function when upload finished 
@@ -144,7 +151,7 @@ int c_yandex_disk_download_data(
 
 //list directory or get info of file
 int c_yandex_disk_ls(			   
-		const char * token,		   //authorization token
+		const char * access_token, //authorization token
 		const char * path,		   //path in yandex disk (file or directory)
 		void * user_data,		   //pointer of data return from callback 
 		int(*callback)(			   //callback function
@@ -156,7 +163,7 @@ int c_yandex_disk_ls(
 
 //list of shared resources
 int c_yandex_disk_ls_public(
-		const char * token,		   //authorization token
+		const char * access_token, //authorization token
 		void * user_data,		   //pointer of data return from callback 
 		int(*callback)(			   //callback function
 			c_yd_file_t *file,     //information of resource 
@@ -166,20 +173,20 @@ int c_yandex_disk_ls_public(
 );
 
 //get url of file
-char *c_yandex_disk_file_url(const char * token, const char * path, char **error);
+char *c_yandex_disk_file_url(const char * access_token, const char * path, char **error);
 
 //create directory
-int c_yandex_disk_mkdir(const char * token, const char * path, char **error);
+int c_yandex_disk_mkdir(const char * access_token, const char * path, char **error);
 
 //remove file/directory
-int c_yandex_disk_rm(const char * token, const char * path, char **error);
+int c_yandex_disk_rm(const char * access_token, const char * path, char **error);
 
 //update resource data
-int c_yandex_disk_patch(const char * token, const char * path, const char *json_data, char **error);
+int c_yandex_disk_patch(const char * access_token, const char * path, const char *json_data, char **error);
 
 //copy file from to
 int c_yandex_disk_cp(
-		const char * token,		   //authorization token
+		const char * access_token, //authorization token
 		const char * from,		   //from path in Yandex Disk 
 		const char * to,	       //to path in Yandex Disk 
 		bool overwrite,			   //overwrite distination 
@@ -192,7 +199,7 @@ int c_yandex_disk_cp(
 
 //move file from to
 int c_yandex_disk_mv(
-		const char * token,		   //authorization token (pass NULL to use config file)
+		const char * access_token, //authorization token
 		const char * from,		   //from path in Yandex Disk 
 		const char * to,	       //to path in Yandex Disk 
 		bool overwrite,			   //overwrite distination 
@@ -204,14 +211,14 @@ int c_yandex_disk_mv(
 );
 
 //publish file
-int c_yandex_disk_publish(const char * token, const char * path, char **error);
+int c_yandex_disk_publish(const char * access_token, const char * path, char **error);
 
 //unpublish file
-int c_yandex_disk_unpublish(const char * token, const char * path, char **error);
+int c_yandex_disk_unpublish(const char * access_token, const char * path, char **error);
 
 //get information of public resource
 int c_yandex_disk_public_ls(
-		const char * token,		   //authorization token (pass NULL to use config file)
+		const char * access_token, //authorization token
 		const char * public_key,   //key or url of public resource 
 		void * user_data,          //pointer of data to transfer throw callback 
 		int(*callback)(			   //callback function
@@ -223,7 +230,7 @@ int c_yandex_disk_public_ls(
 
 //Download public resources
 int c_yandex_disk_download_public_resource(             
-		const char * token,		   //authorization token (pass NULL to use config file)
+		const char * access_token, //authorization token
 		const char * filename,     //filename to save downloaded file
 		const char * public_key,   //key or url of public resource 
 		void *user_data,           //pointer of data to transfer throw callback
@@ -244,7 +251,7 @@ int c_yandex_disk_download_public_resource(
 
 //copy public resource to Yandex Disk
 int c_yandex_disk_public_cp(
-		const char * token,		   //authorization token (pass NULL to use config file)
+		const char * access_token, //authorization token
 		const char * public_key,   //from path in public resource of Yandex Disk 
 		const char * to,	       //to path in Yandex Disk 
 		void *user_data,		   //pointer of data return from callback 

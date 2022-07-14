@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 03.05.2022
+ * Last Modified Date: 14.07.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 /**
@@ -76,10 +76,19 @@ char *c_yandex_disk_url_to_ask_for_authorization_code(const char *client_id,  ch
 	return requestString;
 }
 
-char *c_yandex_disk_get_token(const char *authorization_code, const char *client_id, const char *client_secret, const char *device_name, char **error){
+void c_yandex_disk_get_token(const char *authorization_code, const char *client_id, const char *client_secret, const char *device_name, 
+		void * user_data,
+		int (*callback)(
+			void * user_data,
+			char * access_token,
+			time_t expires_in,
+			char * refresh_token,
+			char * error
+			)
+		){
 	if (authorization_code != NULL) {
-		ERROR(error, "cYandexDisk: No authorization_code.");
-		return NULL;
+		callback(user_data, NULL, 0, NULL, "cYandexDisk: No authorization_code");
+		return;
 	}
 
 	char device_id[37];
@@ -87,8 +96,8 @@ char *c_yandex_disk_get_token(const char *authorization_code, const char *client
 	uuid4_seed(&state);
 	uuid4_gen(&state, &uuid);
 	if (!uuid4_to_s(uuid, device_id, 37)){
-		ERROR(error, "cYandexDisk: Can't genarate UUID");
-		return NULL;
+		callback(user_data, NULL, 0, NULL, "cYandexDisk: Can't genarate UUID");
+		return;
 	}
 	
 	CURL *curl = curl_easy_init();
@@ -128,9 +137,9 @@ char *c_yandex_disk_get_token(const char *authorization_code, const char *client
 		curl_easy_cleanup(curl);
 		curl_slist_free_all(header);
 		if (res) { //handle erros
-			ERROR(error, "cYandexDisk: curl returned error: %d", res);
+			callback(user_data, NULL, 0, NULL, STR("cYandexDisk: curl returned error: %d", res));
 			free(s.ptr);
-            return NULL;			
+            return;			
 		}		
 		//parse JSON answer
 		cJSON *json = cJSON_ParseWithLength(s.ptr, s.len);
@@ -140,23 +149,19 @@ char *c_yandex_disk_get_token(const char *authorization_code, const char *client
 			if (!access_token) { //handle errors
 				cJSON *error_description = cJSON_GetObjectItem(json, "error_description");
 				if (!error_description) {
-					ERROR(error, "cYandexDisk: unknown error!"); //no error code in JSON answer
+					callback(user_data, NULL, NULL, 0, STR("cYandexDisk: unknown error!")); //no error code in JSON answer
 					cJSON_free(json);
-					return NULL;
+					return;
 				}
-				ERROR(error, "cYandexDisk: %s", error_description->valuestring);
+				callback(user_data, NULL, 0, NULL, STR("cYandexDisk: %s", error_description->valuestring)); //no error code in JSON answer
 				cJSON_free(json);
-				return NULL;
+				return;
 			}
 			//OK - we have a token
-			char * token = MALLOC(BUFSIZ);
-			strncpy(token, access_token->valuestring, BUFSIZ - 1);	
-			token[BUFSIZ - 1] = '\0';
+			callback(user_data, access_token->valuestring, cJSON_GetObjectItem(json, "expires_in")->valueint, cJSON_GetObjectItem(json, "refresh_token")->valuestring, NULL);
 			cJSON_free(json);
-			return token;
 		}	
 	}
-	return NULL;
 }
 
 int curl_download_file(const char * filename, const char * url, void * user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow)) 
