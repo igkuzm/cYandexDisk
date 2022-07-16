@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 14.07.2022
+ * Last Modified Date: 16.07.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 /**
@@ -76,7 +76,7 @@ char *c_yandex_disk_url_to_ask_for_authorization_code(const char *client_id,  ch
 	return requestString;
 }
 
-void c_yandex_disk_get_token(const char *authorization_code, const char *client_id, const char *client_secret, const char *device_name, 
+void c_yandex_disk_get_token(const char *verification_code, const char *client_id, const char *client_secret, const char *device_name, 
 		void * user_data,
 		int (*callback)(
 			void * user_data,
@@ -86,8 +86,8 @@ void c_yandex_disk_get_token(const char *authorization_code, const char *client_
 			char * error
 			)
 		){
-	if (authorization_code != NULL) {
-		callback(user_data, NULL, 0, NULL, "cYandexDisk: No authorization_code");
+	if (verification_code == NULL) {
+		callback(user_data, NULL, 0, NULL, "cYandexDisk: No verification_code");
 		return;
 	}
 
@@ -119,7 +119,7 @@ void c_yandex_disk_get_token(const char *authorization_code, const char *client_
 		
 		char post[BUFSIZ];
 		sprintf(post, "grant_type=authorization_code");		
-		sprintf(post, "%s&code=%s",				post, authorization_code);
+		sprintf(post, "%s&code=%s",				post, verification_code);
 		sprintf(post, "%s&client_id=%s",		post, client_id);
 		sprintf(post, "%s&client_secret=%s",	post, client_secret);
 		sprintf(post, "%s&device_id=%s",		post, device_id);
