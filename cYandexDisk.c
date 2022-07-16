@@ -25,11 +25,11 @@
 #include <string.h>
 #include "cJSON.h"
 #include "uuid4/uuid4.h"
-#include <sys/_types/_va_list.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <time.h>
+#include "klib/strfind.h"
 
 #define API_URL "https://cloud-api.yandex.net"
 #define VERIFY_SSL 0
@@ -66,7 +66,8 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s)
 	return size*nmemb;
 }
 
-char *c_yandex_disk_url_to_ask_for_authorization_code(const char *client_id,  char **error) {
+char *
+c_yandex_disk_url_to_ask_for_verification_code(const char *client_id,  char **error) {
 	
 	char *requestString = MALLOC(BUFSIZ);
 	
@@ -76,7 +77,39 @@ char *c_yandex_disk_url_to_ask_for_authorization_code(const char *client_id,  ch
 	return requestString;
 }
 
-void c_yandex_disk_get_token(const char *verification_code, const char *client_id, const char *client_secret, const char *device_name, 
+char *
+c_yandex_disk_verification_code_from_html(
+		const char *html,         //html to search verification code
+		char **error		      //error
+		)
+{
+
+	const char s[] = "class=\"verification-code-code\">"; 
+	int slen = sizeof(s) - 1;
+
+	//find start of verification code class structure in html
+	size_t start = strfind(html, "class=\"verification-code-code\">"); 
+	if (start < 0){
+		ERROR(error, "HTML has no verification code class");
+		return NULL;
+	}
+
+	//find length of verification code
+	size_t clen = strfind(&html[start + slen - 1], "<");
+
+	//allocate code
+	char * code = MALLOC(clen);
+
+	int i;
+	for (i = 0; i < clen; ++i)
+		code[i] = html[start + clen + i];
+
+	return code;
+}
+
+
+void 
+c_yandex_disk_get_token(const char *verification_code, const char *client_id, const char *client_secret, const char *device_name, 
 		void * user_data,
 		int (*callback)(
 			void * user_data,
@@ -149,7 +182,7 @@ void c_yandex_disk_get_token(const char *verification_code, const char *client_i
 			if (!access_token) { //handle errors
 				cJSON *error_description = cJSON_GetObjectItem(json, "error_description");
 				if (!error_description) {
-					callback(user_data, NULL, NULL, 0, STR("cYandexDisk: unknown error!")); //no error code in JSON answer
+					callback(user_data, NULL, 0, NULL, STR("cYandexDisk: unknown error!")); //no error code in JSON answer
 					cJSON_free(json);
 					return;
 				}

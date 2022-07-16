@@ -16,25 +16,18 @@ extern "C" {
 #include <stdbool.h>
 #include <time.h>
 
-typedef struct c_yd_file_t {
-	char   name[256];			//name of resource
-	char   type[8];				//type of resource (file, directory)
-	char   path[BUFSIZ];		//path of resource in disk
-	char   mime_type[64];		
-	size_t size;
-	time_t created;
-	time_t modified;
-	char   preview[BUFSIZ];		//url of preview
-	char   public_key[BUFSIZ];
-	char   public_url[BUFSIZ];
-} c_yd_file_t;
-
-
-//get URL with authoization code request
-char *c_yandex_disk_url_to_ask_for_authorization_code(
+//get URL with verification code request
+char * c_yandex_disk_url_to_ask_for_verification_code(
 		const char *client_id,    //id of application in Yandex
 		char **error			  //error
 );
+
+//parse html and find verification code from Yandex
+char * c_yandex_disk_verification_code_from_html(
+		const char *html,         //html to search verification code
+		char **error		      //error
+);
+
 
 //get authorization token
 void c_yandex_disk_get_token(
@@ -51,6 +44,20 @@ void c_yandex_disk_get_token(
 			char * error
 			)
 );
+
+typedef struct c_yd_file_t {
+	char   name[256];			//name of resource
+	char   type[8];				//type of resource (file, directory)
+	char   path[BUFSIZ];		//path of resource in disk
+	char   mime_type[64];		
+	size_t size;
+	time_t created;
+	time_t modified;
+	char   preview[BUFSIZ];		//url of preview
+	char   public_key[BUFSIZ];
+	char   public_url[BUFSIZ];
+} c_yd_file_t;
+
 
 //get info of file/directory
 c_yd_file_t *
