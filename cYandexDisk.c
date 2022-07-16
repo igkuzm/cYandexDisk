@@ -98,7 +98,7 @@ c_yandex_disk_verification_code_from_html(
 	size_t clen = strfind(&html[start + slen - 1], "<") - 1;
 
 	//allocate code
-	char * code = MALLOC(clen);
+	char * code = MALLOC(clen + 1);
 
 	int i;
 	for (i = 0; i < clen; ++i)
