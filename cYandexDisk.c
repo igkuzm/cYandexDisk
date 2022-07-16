@@ -88,21 +88,21 @@ c_yandex_disk_verification_code_from_html(
 	int slen = sizeof(s) - 1;
 
 	//find start of verification code class structure in html
-	size_t start = strfind(html, "class=\"verification-code-code\">"); 
+	size_t start = strfind(html, s); 
 	if (start < 0){
 		ERROR(error, "HTML has no verification code class");
 		return NULL;
 	}
 
 	//find length of verification code
-	size_t clen = strfind(&html[start + slen - 1], "<");
+	size_t clen = strfind(&html[start + slen - 1], "<") - 1;
 
 	//allocate code
 	char * code = MALLOC(clen);
 
 	int i;
 	for (i = 0; i < clen; ++i)
-		code[i] = html[start + clen + i];
+		code[i] = html[start + slen + i];
 
 	return code;
 }
