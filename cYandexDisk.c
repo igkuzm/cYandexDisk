@@ -5,13 +5,6 @@
  * Last Modified Date: 20.07.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
-/**
- * File              : cYandexDisk.c
- * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
- * Date              : 29.03.2022
- * Last Modified Date: 03.04.2022
- * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
- */
 
 #include "cYandexDisk.h"
 #include <curl/curl.h>
