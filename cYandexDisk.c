@@ -67,8 +67,8 @@ c_yandex_disk_url_to_ask_for_verification_code(const char *client_id,  char **er
 	
 	char *requestString = MALLOC(BUFSIZ);
 	
-	sprintf(requestString, "\"https://oauth.yandex.ru/authorize?response_type=code");	
-	sprintf(requestString, "%s&client_id=%s\"", requestString, client_id);
+	sprintf(requestString, "https://oauth.yandex.ru/authorize?response_type=code");	
+	sprintf(requestString, "%s&client_id=%s", requestString, client_id);
 	
 	return requestString;
 }
@@ -81,24 +81,24 @@ c_yandex_disk_verification_code_from_html(
 {
 
 	const char s[] = "class=\"verification-code-code\">"; 
-	int slen = sizeof(s) - 1;
+	int len = sizeof(s) - 1;
 
 	//find start of verification code class structure in html
-	size_t start = strfind(html, s); 
+	int start = strfnd(html, s); 
 	if (start < 0){
 		ERROR(error, "HTML has no verification code class");
 		return NULL;
 	}
+		
+	//find end of code
+	int end = strfnd(&html[start], "<");
 
 	//find length of verification code
-	size_t clen = strfind(&html[start + slen - 1], "<") - 1;
+	int clen = end - len;
 
-	//allocate code
+	//allocate code and copy
 	char * code = MALLOC(clen + 1);
-
-	int i;
-	for (i = 0; i < clen; ++i)
-		code[i] = html[start + slen + i];
+	strncpy(code, &html[start + len], clen);
 
 	return code;
 }
