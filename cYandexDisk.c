@@ -568,7 +568,7 @@ void *curl_transfer_file_in_thread(void *_params)
 	pthread_exit(0);
 }
 
-int _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfer, const char *filename, void * data, size_t size, char *error, void *user_data, int (*callback)(size_t size, void *user_data, char *error), int (*callback_data)(size_t size, void *data, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
+int  _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfer, bool wait_finish, const char *filename, void * data, size_t size, char *error, void *user_data, int (*callback)(size_t size, void *user_data, char *error), int (*callback_data)(size_t size, void *data, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	if (!json) {
 		if (callback)
@@ -614,6 +614,15 @@ int _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfer
 		return err;
 	}
 
+	if (wait_finish){
+		//connect to thread and wait finish
+		err = pthread_join(tid, NULL);
+		if (err) {
+			if (callback)
+				callback(0,user_data,STR("Error in THREAD: %d\n", err));
+		}	
+	}
+
 	return 0;
 }
 
@@ -642,7 +651,7 @@ c_yandex_disk_file_url(const char * token, const char * path, char **error)
 	return url;
 }
 
-int c_yandex_disk_upload_file(const char * token, const char * filename, const char * path, bool overwrite, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
+int c_yandex_disk_upload_file(const char * token, const char * filename, const char * path, bool overwrite, bool wait_finish, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);
@@ -653,10 +662,10 @@ int c_yandex_disk_upload_file(const char * token, const char * filename, const c
 	char *error;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/upload", NULL, token, &error, path_arg, overwrite_arg, NULL);
 
-	return _c_yandex_disk_transfer_file_parser(json, FILE_UPLOAD, filename, NULL, 0, error, user_data, callback, NULL, clientp, progress_callback);
+	return _c_yandex_disk_transfer_file_parser(json, FILE_UPLOAD, wait_finish, filename, NULL, 0, error, user_data, callback, NULL, clientp, progress_callback);
 }
 
-int c_yandex_disk_upload_data(const char * token, void * data, size_t size, const char * path, bool overwrite, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
+int c_yandex_disk_upload_data(const char * token, void * data, size_t size, const char * path, bool overwrite, bool wait_finish, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);
@@ -667,20 +676,20 @@ int c_yandex_disk_upload_data(const char * token, void * data, size_t size, cons
 	char *error;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/upload", NULL, token, &error, path_arg, overwrite_arg, NULL);
 
-	return _c_yandex_disk_transfer_file_parser(json, DATA_UPLOAD, NULL, data, size, error, user_data, callback, NULL, clientp, progress_callback);
+	return _c_yandex_disk_transfer_file_parser(json, DATA_UPLOAD, wait_finish, NULL, data, size, error, user_data, callback, NULL, clientp, progress_callback);
 }
 
-int c_yandex_disk_download_file(const char * token, const char * filename, const char * path, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
+int c_yandex_disk_download_file(const char * token, const char * filename, const char * path, bool wait_finish, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);
 
 	char *error = NULL;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/download", NULL, token, &error, path_arg, NULL);
-	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, filename, NULL, 0, error, user_data, callback, NULL, clientp, progress_callback);
+	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, wait_finish, filename, NULL, 0, error, user_data, callback, NULL, clientp, progress_callback);
 }
 
-int c_yandex_disk_download_data(const char * token, const char * path, void *user_data, int (*callback)(size_t size, void *data, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
+int c_yandex_disk_download_data(const char * token, const char * path, bool wait_finish, void *user_data, int (*callback)(size_t size, void *data, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);
@@ -689,17 +698,17 @@ int c_yandex_disk_download_data(const char * token, const char * path, void *use
 
 	char *error = NULL;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/download", NULL, token, &error, path_arg, NULL);
-	return _c_yandex_disk_transfer_file_parser(json, DATA_DOWNLOAD, NULL, NULL, 0, error, user_data, NULL, callback, clientp, progress_callback);
+	return _c_yandex_disk_transfer_file_parser(json, DATA_DOWNLOAD, wait_finish, NULL, NULL, 0, error, user_data, NULL, callback, clientp, progress_callback);
 }
 
-int c_yandex_disk_download_public_resource(const char * token, const char * filename, const char * public_key, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
+int c_yandex_disk_download_public_resource(const char * token, const char * filename, const char * public_key, bool wait_finish, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	char public_key_arg[BUFSIZ];
 	sprintf(public_key_arg, "public_key=%s", public_key);	
 
 	char *error = NULL;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources/download", NULL, token, &error, public_key_arg, NULL);
-	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, filename, NULL, 0, error, user_data, callback, NULL, clientp, progress_callback);
+	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, wait_finish, filename, NULL, 0, error, user_data, callback, NULL, clientp, progress_callback);
 }
 
 int c_json_to_c_yd_file_t(cJSON *json, c_yd_file_t *file)

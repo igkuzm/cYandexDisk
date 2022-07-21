@@ -2,7 +2,7 @@
  * File              : cYandexDisk.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 16.07.2022
+ * Last Modified Date: 21.07.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 /*
@@ -75,6 +75,7 @@ int c_yandex_disk_upload_file(
 		const char * filename,     //filename to upload
 		const char * path,         //path in yandex disk to save file - start with app:/
 		bool overwrite,			   //overwrite distination 
+		bool wait_finish,
 		void *user_data,           //pointer of data to transfer throw callback
 		int (*callback)(		   //callback function when upload finished 
 			size_t size,           //size of uploaded file
@@ -98,6 +99,7 @@ int c_yandex_disk_upload_data(
 		size_t size,			   //data size
 		const char * path,         //path in yandex disk to save file - start with app:/
 		bool overwrite,			   //overwrite distination 
+		bool wait_finish,
 		void *user_data,           //pointer of data to transfer throw callback
 		int (*callback)(		   //callback function when upload finished 
 			size_t size,           //size of uploaded file
@@ -119,6 +121,7 @@ int c_yandex_disk_download_file(
 		const char * access_token, //authorization token
 		const char * filename,     //filename to save downloaded file
 		const char * path,         //path in yandex disk of file to download - start with app:/
+		bool wait_finish,
 		void *user_data,           //pointer of data to transfer throw callback
 		int (*callback)(		   //callback function when upload finished 
 			size_t size,           //size of downloaded file
@@ -139,6 +142,7 @@ int c_yandex_disk_download_file(
 int c_yandex_disk_download_data(             
 		const char * access_token, //authorization token
 		const char * path,         //path in yandex disk of file to download - start with app:/
+		bool wait_finish,
 		void *user_data,           //pointer of data to transfer throw callback
 		int (*callback)(		   //callback function when upload finished 
 			size_t size,           //size of downloaded data
@@ -240,6 +244,7 @@ int c_yandex_disk_download_public_resource(
 		const char * access_token, //authorization token
 		const char * filename,     //filename to save downloaded file
 		const char * public_key,   //key or url of public resource 
+		bool wait_finish,
 		void *user_data,           //pointer of data to transfer throw callback
 		int (*callback)(		   //callback function when upload finished 
 			size_t size,           //size of downloaded file
