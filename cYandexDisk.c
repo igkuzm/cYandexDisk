@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 20.07.2022
+ * Last Modified Date: 21.07.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -253,6 +253,7 @@ size_t curl_download_data_writefunc(void *ptr, size_t size, size_t nmemb, struct
 
 size_t curl_download_data(const char * url, void * user_data, int (*callback)(size_t size, void *data, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow)) 
 {
+	printf("curl_download_data url: %s\n", url);
 	CURL *curl;
     CURLcode res;
 
@@ -477,6 +478,8 @@ cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const
 			arg = va_arg(argv, char*);	
 		}
 		va_end(argv);
+
+		printf("CURL requestString: %s\n", requestString);
 		
 		curl_easy_setopt(curl, CURLOPT_URL, requestString);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, http_method);		
@@ -681,6 +684,8 @@ int c_yandex_disk_download_data(const char * token, const char * path, void *use
 {
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);
+
+	printf("c_yandex_disk_download_data path: %s\n", path);
 
 	char *error = NULL;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/download", NULL, token, &error, path_arg, NULL);
