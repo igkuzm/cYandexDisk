@@ -33,28 +33,6 @@
 #define STR(...) ({char ___str[BUFSIZ]; sprintf(___str, __VA_ARGS__); ___str;})
 #define STRCOPY(str0, str1) ({size_t ___size = sizeof(str0); strncpy(str0, str1, ___size - 1); str0[___size - 1] = '\0';})
 
-struct string {
-	char *ptr;
-	size_t len;
-};
-
-void init_string(struct string *s) {
-	s->len = 0;
-	s->ptr = MALLOC(s->len+1);
-	s->ptr[0] = '\0';
-}
-
-size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s)
-{
-	size_t new_len = s->len + size*nmemb;
-	s->ptr = REALLOC(s->ptr, new_len+1);
-	memcpy(s->ptr+s->len, ptr, size*nmemb);
-	s->ptr[new_len] = '\0';
-	s->len = new_len;
-
-	return size*nmemb;
-}
-
 char *
 c_yandex_disk_url_to_ask_for_verification_code(const char *client_id,  char **error) {
 	
@@ -96,6 +74,28 @@ c_yandex_disk_verification_code_from_html(
 	return code;
 }
 
+
+struct string {
+	char *ptr;
+	size_t len;
+};
+
+void init_string(struct string *s) {
+	s->len = 0;
+	s->ptr = MALLOC(s->len+1);
+	s->ptr[0] = '\0';
+}
+
+size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s)
+{
+	size_t new_len = s->len + size*nmemb;
+	s->ptr = REALLOC(s->ptr, new_len+1);
+	memcpy(s->ptr+s->len, ptr, size*nmemb);
+	s->ptr[new_len] = '\0';
+	s->len = new_len;
+
+	return size*nmemb;
+}
 
 void 
 c_yandex_disk_get_token(const char *verification_code, const char *client_id, const char *client_secret, const char *device_name, 
