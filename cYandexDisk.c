@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 22.07.2022
+ * Last Modified Date: 26.07.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -55,17 +55,17 @@ c_yandex_disk_verification_code_from_html(
 	int len = sizeof(s) - 1;
 
 	//find start of verification code class structure in html
-	int start = strfnd(html, s); 
+	long start = strfnd(html, s); 
 	if (start < 0){
 		ERROR(error, "HTML has no verification code class");
 		return NULL;
 	}
 		
 	//find end of code
-	int end = strfnd(&html[start], "<");
+	long end = strfnd(&html[start], "<");
 
 	//find length of verification code
-	int clen = end - len;
+	long clen = end - len;
 
 	//allocate code and copy
 	char * code = MALLOC(clen + 1);
@@ -237,15 +237,26 @@ int curl_download_file(const char * filename, const char * url, void * user_data
 }
 
 struct curl_download_data_t {
-	void *data;
+	void * data;
 	size_t size;
 };
 
-size_t curl_download_data_writefunc(void *ptr, size_t size, size_t nmemb, struct curl_download_data_t *t)
+void init_data(struct curl_download_data_t *t) {
+	t->size = 0;
+	t->data = MALLOC(8);
+}
+
+size_t curl_download_data_writefunc(void *data, size_t size, size_t nmemb, struct curl_download_data_t *t)
 {
-	size_t new_len = t->size + size*nmemb;
-	t->data = REALLOC(t->data, new_len);
-	memcpy(t->data+t->size, ptr, size*nmemb);
+	size_t realsize = size * nmemb;
+	size_t new_len = t->size + realsize;
+	void *p = realloc(t->data, new_len);
+	if (!p)
+		return 0;
+	t->data = p;
+	/*memcpy(t->data+t->size, ptr, size*nmemb);*/
+	memcpy(&(t->data[t->size]), data, realsize);
+	
 	t->size = new_len;
 
 	return size*nmemb;
@@ -258,18 +269,18 @@ size_t curl_download_data(const char * url, void * user_data, int (*callback)(si
     CURLcode res;
 
 	struct curl_download_data_t t;
-	t.data = MALLOC(1);
-	t.size = 0;
+	init_data(&t);
 
     curl = curl_easy_init();
     if (curl) {
 		
         curl_easy_setopt(curl, CURLOPT_URL, url);
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_download_data_writefunc);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &t);
 		/* enable verbose for easier tracing */
-		/*curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);*/
+		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 		/* example.com is redirected, so we tell libcurl to follow redirection */
+		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1);
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);		
 		if (progress_callback) {
 			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, clientp);
@@ -294,6 +305,7 @@ size_t curl_download_data(const char * url, void * user_data, int (*callback)(si
         /* always cleanup */
 		curl_easy_cleanup(curl);
     }
+	free(t.data);
     return t.size;
 }
 
@@ -614,14 +626,14 @@ int  _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfe
 		return err;
 	}
 
-	if (wait_finish){
-		//connect to thread and wait finish
-		err = pthread_join(tid, NULL);
-		if (err) {
-			if (callback)
-				callback(0,user_data,STR("Error in THREAD: %d\n", err));
-		}	
-	}
+	//if (wait_finish){
+		////connect to thread and wait finish
+		//err = pthread_join(tid, NULL);
+		//if (err) {
+			//if (callback)
+				//callback(0,user_data,STR("Error in THREAD: %d\n", err));
+		//}	
+	//}
 
 	return 0;
 }
