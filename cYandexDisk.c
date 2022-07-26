@@ -248,17 +248,12 @@ void init_data(struct curl_download_data_t *t) {
 
 size_t curl_download_data_writefunc(void *data, size_t size, size_t nmemb, struct curl_download_data_t *t)
 {
-	printf("curl_download_data_writefunc: SIZE is %ld:%ld\n", size, nmemb);
-	printf("curl_download_data_writefunc: DATA is %s\n", data?"not null":"NULL");
-	char *mydata = data;
-	printf("DATA 0123: %c%c%c%c\n", mydata[10], mydata[11], mydata[12], mydata[13]);
 	size_t realsize = size * nmemb;
 	size_t new_len = t->size + realsize;
 	void *p = realloc(t->data, new_len);
 	if (!p)
 		return 0;
 	t->data = p;
-	/*memcpy(t->data+t->size, ptr, size*nmemb);*/
 	memcpy(&(t->data[t->size]), data, realsize);
 	
 	t->size = new_len;
@@ -268,7 +263,6 @@ size_t curl_download_data_writefunc(void *data, size_t size, size_t nmemb, struc
 
 size_t curl_download_data(const char * url, void * user_data, int (*callback)(size_t size, void *data, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow)) 
 {
-	printf("curl_download_data url: %s\n", url);
 	CURL *curl;
     CURLcode res;
 
@@ -282,9 +276,8 @@ size_t curl_download_data(const char * url, void * user_data, int (*callback)(si
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_download_data_writefunc);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &t);
 		/* enable verbose for easier tracing */
-		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+		//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 		/* example.com is redirected, so we tell libcurl to follow redirection */
-		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1);
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);		
 		if (progress_callback) {
 			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, clientp);
