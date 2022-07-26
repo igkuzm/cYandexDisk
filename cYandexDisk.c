@@ -248,6 +248,10 @@ void init_data(struct curl_download_data_t *t) {
 
 size_t curl_download_data_writefunc(void *data, size_t size, size_t nmemb, struct curl_download_data_t *t)
 {
+	printf("curl_download_data_writefunc: SIZE is %ld:%ld\n", size, nmemb);
+	printf("curl_download_data_writefunc: DATA is %s\n", data?"not null":"NULL");
+	char *mydata = data;
+	printf("DATA 0123: %c%c%c%c\n", mydata[10], mydata[11], mydata[12], mydata[13]);
 	size_t realsize = size * nmemb;
 	size_t new_len = t->size + realsize;
 	void *p = realloc(t->data, new_len);
