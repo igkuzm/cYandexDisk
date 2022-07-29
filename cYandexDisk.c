@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 26.07.2022
+ * Last Modified Date: 29.07.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -388,34 +388,16 @@ int curl_upload_file(const char * filename, const char * url, void *user_data, i
 	return 0;
 }
 
-struct curl_upload_data_d {
-	void * data;
-	size_t total;
-	size_t size;
-}; 
-
-size_t curl_upload_data_readfunc(char *ptr, size_t size, size_t nmemb, void *userdata)
-{
-	struct curl_upload_data_d *d = userdata;
-
-	if (size*nmemb > d->size) {
-		memcpy(ptr, d->data, d->size);
-	} else {
-		d->size = d->total - size*nmemb;
-		memcpy(ptr, d->data, size*nmemb);
-	}
-	return d->size;
+size_t curl_upload_data_readfunc(char *buffer, size_t size, size_t nmemb, void * data){
+	size_t real_size = size*nmemb;
+	memcpy(buffer, data, real_size);
+	return real_size;
 }
 
 int curl_upload_data(void * data, size_t size, const char * url, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	CURL *curl;
 	CURLcode res;
-
-	struct curl_upload_data_d d;
-	d.data = data;
-	d.total = size;
-	d.size = size;
 
 	curl = curl_easy_init();
 	if(curl) {
@@ -426,7 +408,7 @@ int curl_upload_data(void * data, size_t size, const char * url, void *user_data
 		curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
 
 		/* set where to read from (on Windows you need to use READFUNCTION too) */
-		curl_easy_setopt(curl, CURLOPT_READDATA, &d);
+		curl_easy_setopt(curl, CURLOPT_READDATA, data);
 		curl_easy_setopt(curl, CURLOPT_READFUNCTION, curl_upload_data_readfunc);
 
 		/* and give the size of the upload (optional) */
@@ -488,8 +470,6 @@ cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const
 		}
 		va_end(argv);
 
-		printf("CURL requestString: %s\n", requestString);
-		
 		curl_easy_setopt(curl, CURLOPT_URL, requestString);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, http_method);		
 		curl_easy_setopt(curl, CURLOPT_HEADER, 0);
@@ -702,8 +682,6 @@ int c_yandex_disk_download_data(const char * token, const char * path, bool wait
 {
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);
-
-	printf("c_yandex_disk_download_data path: %s\n", path);
 
 	char *error = NULL;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/download", NULL, token, &error, path_arg, NULL);
