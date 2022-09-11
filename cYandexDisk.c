@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 29.07.2022
+ * Last Modified Date: 11.09.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -18,7 +18,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <time.h>
-#include "klib/strfind.h"
+#include "strfind.h"
 
 #define API_URL "https://cloud-api.yandex.net"
 #define VERIFY_SSL 0
