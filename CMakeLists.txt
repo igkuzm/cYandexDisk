@@ -46,7 +46,7 @@ endif()
 add_library(${TARGET} STATIC cYandexDisk.c cJSON.c uuid4/uuid4.c)
 target_link_libraries(${TARGET} curl)
 
-if(${BUILD_TEST})
+if(${CYD_BUILD_TEST})
 	add_executable(cYandexDisk_test test.c)
 	target_link_libraries(cYandexDisk_test ${TARGET})
 endif()
