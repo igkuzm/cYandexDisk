@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 11.09.2022
+ * Last Modified Date: 15.09.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -50,28 +50,39 @@ c_yandex_disk_verification_code_from_html(
 		char **error		      //error
 		)
 {
+	const char * patterns[] = {
+		"verification_code%3Fcode%3D",
+		"class=\"verification-code-code\">"
+	};
+	const char *pattern_ends[] = {
+		"&",
+		"<"
+	};	
 
-	const char s[] = "class=\"verification-code-code\">"; 
-	int len = sizeof(s) - 1;
+	int i;
+	for (int i = 0; i < 2; i++) {
+		const char * s = patterns[i]; 
+		int len = strlen(s);
 
-	//find start of verification code class structure in html
-	long start = strfnd(html, s); 
-	if (start < 0){
-		ERROR(error, "HTML has no verification code class");
-		return NULL;
+		//find start of verification code class structure in html
+		long start = strfnd(html, s); 
+		if (start < 0)
+			ERROR(error, "HTML has no verification code class");
+		else {
+			//find end of code
+			long end = strfnd(&html[start], pattern_ends[i]);
+
+			//find length of verification code
+			long clen = end - len;
+
+			//allocate code and copy
+			char * code = MALLOC(clen + 1);
+			strncpy(code, &html[start + len], clen);
+
+			return code;
+		}
 	}
-		
-	//find end of code
-	long end = strfnd(&html[start], "<");
-
-	//find length of verification code
-	long clen = end - len;
-
-	//allocate code and copy
-	char * code = MALLOC(clen + 1);
-	strncpy(code, &html[start + len], clen);
-
-	return code;
+	return NULL;
 }
 
 
