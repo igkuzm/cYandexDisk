@@ -21,7 +21,7 @@
 #include "strfind.h"
 
 #define API_URL "https://cloud-api.yandex.net"
-#define VERIFY_SSL 1
+#define VERIFY_SSL 0
 
 //memory allocation helpers
 #define MALLOC(size) ({void* const ___p = malloc(size); if(!___p) {perror("Malloc"); exit(EXIT_FAILURE);} ___p;})
