@@ -300,9 +300,9 @@ size_t curl_download_data(const char * url, void * user_data, int (*callback)(si
 
 		if(res != CURLE_OK) {
 			if (callback)
-				callback(0,NULL,user_data, STR("cYandexDisk: curl_easy_perform() failed: %s\n", curl_easy_strerror(res)));
+				callback(0,NULL,user_data, STR("cYandexDisk: curl_easy_perform() failed: %s, code: %d\n", curl_easy_strerror(res), res));
 			curl_easy_cleanup(curl);
-			//return -1;
+			////return -1;
 		} else {
 			/* now extract transfer info */
 			curl_off_t size;
