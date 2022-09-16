@@ -220,6 +220,7 @@ int curl_download_file(const char * filename, const char * url, void * user_data
 		/*curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);*/
 		/* example.com is redirected, so we tell libcurl to follow redirection */
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);		
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
 		if (progress_callback) {
 			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, clientp);
 			curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
@@ -290,6 +291,7 @@ size_t curl_download_data(const char * url, void * user_data, int (*callback)(si
 		//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 		/* example.com is redirected, so we tell libcurl to follow redirection */
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);		
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
 		if (progress_callback) {
 			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, clientp);
 			curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
@@ -371,6 +373,8 @@ int curl_upload_file(const char * filename, const char * url, void *user_data, i
 		/* enable verbose for easier tracing */
 		//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
+		
 		if (progress_callback) {
 			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, clientp);
 			curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
@@ -427,6 +431,8 @@ int curl_upload_data(void * data, size_t size, const char * url, void *user_data
 
 		/* enable verbose for easier tracing */
 		//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+        
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
 
 		if (progress_callback) {
 			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, clientp);
