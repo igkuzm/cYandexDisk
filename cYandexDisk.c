@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 15.09.2022
+ * Last Modified Date: 16.09.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -302,7 +302,7 @@ size_t curl_download_data(const char * url, void * user_data, int (*callback)(si
 			if (callback)
 				callback(0,NULL,user_data, STR("cYandexDisk: curl_easy_perform() failed: %s\n", curl_easy_strerror(res)));
 			curl_easy_cleanup(curl);
-			return -1;
+			//return -1;
 		} else {
 			/* now extract transfer info */
 			curl_off_t size;
