@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 16.09.2022
+ * Last Modified Date: 19.09.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -598,6 +598,8 @@ int  _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfe
 	int err = pthread_attr_init(&attr);
 	if (err) {
 		perror("THREAD attributes");
+		if (callback)
+			callback(0,user_data,STR("cYandexDisk: %s", "THREAD attributes"));
 		return err;
 	}	
 
@@ -617,6 +619,8 @@ int  _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfe
 	err = pthread_create(&tid,&attr, curl_transfer_file_in_thread, params);
 	if (err) {
 		perror("create THREAD");
+		if (callback)
+			callback(0,user_data,STR("cYandexDisk: %s", "create THREAD"));
 		return err;
 	}
 
