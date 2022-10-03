@@ -14,7 +14,7 @@ project(
 	${TARGET} VERSION 1.0 
 	DESCRIPTION "C API for Yandex Disk"
 	HOMEPAGE_URL ""
-	LANGUAGES C 
+	LANGUAGES C CXX 
 )
 
 
@@ -33,6 +33,8 @@ elseif(APPLE)
 	INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/curl/iOS/include)
   endif()
 elseif(WIN32)
+	#add strptime
+	set(ADDSRC strptime.cc)
 	#ADD_LIBRARY(curl STATIC IMPORTED)
 	if(CMAKE_SIZEOF_VOID_P EQUAL 8) #64 bit	
 		#SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib/libcurl.a)
@@ -45,7 +47,7 @@ elseif(WIN32)
 	endif()
 endif()
 
-add_library(${TARGET} STATIC cYandexDisk.c cJSON.c uuid4/uuid4.c)
+add_library(${TARGET} STATIC cYandexDisk.c cJSON.c uuid4/uuid4.c ${ADDSRC})
 target_link_libraries(${TARGET} curl z)
 target_link_directories(${TARGET} PRIVATE ${ADDDIRS})
 

@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 03.10.2022
+ * Last Modified Date: 04.10.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -19,6 +19,11 @@
 #include <pthread.h>
 #include <time.h>
 #include "strfind.h"
+
+//add strptime for winapi
+#ifdef _WIN32
+char * strptime(const char* s, const char* f, struct tm* tm);
+#endif
 
 #define API_URL "https://cloud-api.yandex.net"
 #define VERIFY_SSL 0
@@ -757,11 +762,11 @@ int c_json_to_c_yd_file_t(cJSON *json, c_yd_file_t *file)
 	cJSON *modified = cJSON_GetObjectItem(json, "modified");	
 	if (modified) {
 		struct tm tm = {0};
-		sscanf(modified->valuestring, "%d-%d-%dT%d:%d:%d+00:00", &tm.tm_year, &tm.tm_mon, &tm.tm_mday, &tm.tm_hour, &tm.tm_min, &tm.tm_sec);
-		tm.tm_year -= 1900; //struct tm year starts from 1900
-		tm.tm_mon -= 1; //struct tm mount start with 0 for January
-		tm.tm_isdst = 0; //should not use summer time flag		
-		/*strptime(modified->valuestring, "%FT%T%z", &tm);*/
+		//sscanf(modified->valuestring, "%d-%d-%dT%d:%d:%d+00:00", &tm.tm_year, &tm.tm_mon, &tm.tm_mday, &tm.tm_hour, &tm.tm_min, &tm.tm_sec);
+		//tm.tm_year -= 1900; //struct tm year starts from 1900
+		//tm.tm_mon -= 1; //struct tm mount start with 0 for January
+		//tm.tm_isdst = 0; //should not use summer time flag		
+		strptime(modified->valuestring, "%FT%T%z", &tm);
 		file->modified = mktime(&tm);
 	}	
 
@@ -769,11 +774,7 @@ int c_json_to_c_yd_file_t(cJSON *json, c_yd_file_t *file)
 	cJSON *created = cJSON_GetObjectItem(json, "created");	
 	if (created) {
 		struct tm tm = {0};
-		sscanf(modified->valuestring, "%d-%d-%dT%d:%d:%d+00:00", &tm.tm_year, &tm.tm_mon, &tm.tm_mday, &tm.tm_hour, &tm.tm_min, &tm.tm_sec);
-		tm.tm_year -= 1900; //struct tm year starts from 1900
-		tm.tm_mon -= 1; //struct tm mount start with 0 for January
-		tm.tm_isdst = 0; //should not use summer time flag		
-		/*strptime(modified->valuestring, "%FT%T%z", &tm);*/
+		strptime(modified->valuestring, "%FT%T%z", &tm);
 		file->created = mktime(&tm);
 	}		
 	
