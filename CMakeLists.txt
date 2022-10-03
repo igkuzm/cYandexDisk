@@ -33,20 +33,35 @@ elseif(APPLE)
 	INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/curl/iOS/include)
   endif()
 elseif(WIN32)
-	ADD_LIBRARY(curl STATIC IMPORTED)
+	#ADD_LIBRARY(curl STATIC IMPORTED)
 	if(CMAKE_SIZEOF_VOID_P EQUAL 8) #64 bit	
-		SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib/libcurl.a)
+		#SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib/libcurl.a)
 		INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/include)
+		SET(ADDDIRS ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib)
 	elseif(CMAKE_SIZEOF_VOID_P EQUAL 4) #32 bit
-		SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib/libcurl.a)	
+		#SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib/libcurl.a)	
 		INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/include)
+		SET(ADDDIRS ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib)
 	endif()
 endif()
 
 add_library(${TARGET} STATIC cYandexDisk.c cJSON.c uuid4/uuid4.c)
 target_link_libraries(${TARGET} curl z)
+target_link_directories(${TARGET} PRIVATE ${ADDDIRS})
 
 if(${CYD_BUILD_TEST})
 	add_executable(cYandexDisk_test test.c)
 	target_link_libraries(cYandexDisk_test ${TARGET})
+endif()
+
+#copy files
+if (WIN32)
+	#curl libs
+	if(CMAKE_SIZEOF_VOID_P EQUAL 8) #64 bit	
+		file(INSTALL DESTINATION "${CMAKE_BINARY_DIR}/" FILES 
+			"${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib/libcurl.dll.a")
+	elseif(CMAKE_SIZEOF_VOID_P EQUAL 4) #32 bit
+		file(INSTALL DESTINATION "${CMAKE_BINARY_DIR}/" FILES
+			"${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib/libcurl.dll.a")
+	endif()	
 endif()
