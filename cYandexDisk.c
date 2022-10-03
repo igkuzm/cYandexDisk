@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 19.09.2022
+ * Last Modified Date: 03.10.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -29,7 +29,7 @@
 #define NEW(T) ((T*)MALLOC(sizeof(T)))
 
 //error and string helpers
-#define ERROR(ptr, ...) ({if(ptr) {*ptr = MALLOC(BUFSIZ); sprintf(*ptr, __VA_ARGS__);};})
+#define ERRORSTR(ptr, ...) ({if(ptr) {*ptr = MALLOC(BUFSIZ); sprintf(*ptr, __VA_ARGS__);};})
 #define STR(...) ({char ___str[BUFSIZ]; sprintf(___str, __VA_ARGS__); ___str;})
 #define STRCOPY(str0, str1) ({size_t ___size = sizeof(str0); strncpy(str0, str1, ___size - 1); str0[___size - 1] = '\0';})
 
@@ -67,7 +67,7 @@ c_yandex_disk_verification_code_from_html(
 		//find start of verification code class structure in html
 		long start = strfnd(html, s); 
 		if (start < 0)
-			ERROR(error, "HTML has no verification code class");
+			ERRORSTR(error, "HTML has no verification code class");
 		else {
 			//find end of code
 			long end = strfnd(&html[start], pattern_ends[i]);
@@ -516,7 +516,7 @@ cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const
 		curl_easy_cleanup(curl);
 		curl_slist_free_all(header);
 		if (res) { //handle erros
-			ERROR(error, "cYandexDisk: curl returned error: %d", res);
+			ERRORSTR(error, "cYandexDisk: curl returned error: %d", res);
 			free(s.ptr);
             return NULL;			
 		}		
@@ -649,7 +649,7 @@ c_yandex_disk_file_url(const char * token, const char * path, char **error)
 	cJSON *href = cJSON_GetObjectItem(json, "href");
 	if (!href){ //error to get info
 		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		ERROR(error, "cYandexDisk: %s", message->valuestring);
+		ERRORSTR(error, "cYandexDisk: %s", message->valuestring);
 		cJSON_free(json);
 		return  NULL;		
 	}	
@@ -825,7 +825,7 @@ c_yandex_disk_file_info(
 	char *error = NULL;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources", NULL, token, &error, path_arg, NULL);
 	if (error) {
-		ERROR(_error, "%s", error);
+		ERRORSTR(_error, "%s", error);
 	}
 
 	if (!json) { //no json returned
@@ -833,7 +833,7 @@ c_yandex_disk_file_info(
 	}
 	if (!cJSON_GetObjectItem(json, "path")){ //error to get info of file/directory
 		cJSON *message = cJSON_GetObjectItem(json, "error");
-		ERROR(_error, "%s", message->valuestring);
+		ERRORSTR(_error, "%s", message->valuestring);
 		cJSON_free(json);
 		return NULL;
 	}	
@@ -867,7 +867,7 @@ int _c_yandex_disk_standart_parser(cJSON *json, char **error){
 
 	if (!cJSON_GetObjectItem(json, "href") && !cJSON_GetObjectItem(json, "path")){ //error to get info
 		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		ERROR(error, "cYandexDisk: %s", message->valuestring);
+		ERRORSTR(error, "cYandexDisk: %s", message->valuestring);
 		cJSON_free(json);
 		return  -1;		
 	}	
