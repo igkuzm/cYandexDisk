@@ -35,15 +35,17 @@ elseif(APPLE)
 elseif(WIN32)
 	#add strptime
 	set(ADDSRC strptime.cc)
-	#ADD_LIBRARY(curl STATIC IMPORTED)
+	ADD_LIBRARY(curl STATIC IMPORTED)
 	if(CMAKE_SIZEOF_VOID_P EQUAL 8) #64 bit	
-		#SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib/libcurl.a)
+		SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION
+			${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib/libcurl.dll.a)
 		INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/include)
-		SET(ADDDIRS ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib)
+		#SET(ADDDIRS ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib)
 	elseif(CMAKE_SIZEOF_VOID_P EQUAL 4) #32 bit
-		#SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib/libcurl.a)	
+		SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION
+			${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib/libcurl.dll.a)	
 		INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/include)
-		SET(ADDDIRS ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib)
+		#SET(ADDDIRS ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib)
 	endif()
 endif()
 
@@ -59,11 +61,21 @@ endif()
 #copy files
 if (WIN32)
 	#curl libs
+	#Copy DLLs
 	if(CMAKE_SIZEOF_VOID_P EQUAL 8) #64 bit	
-		file(INSTALL DESTINATION "${CMAKE_BINARY_DIR}/" FILES 
-			"${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib/libcurl.dll.a")
+		file(GLOB files 
+			"${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib/*.dll"
+			)	
 	elseif(CMAKE_SIZEOF_VOID_P EQUAL 4) #32 bit
-		file(INSTALL DESTINATION "${CMAKE_BINARY_DIR}/" FILES
-			"${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib/libcurl.dll.a")
+		file(GLOB files 
+			"${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib/*.dll"
+			)	
 	endif()	
+	#Copy
+	foreach(_file ${files})
+			file(INSTALL
+				DESTINATION "${CMAKE_BINARY_DIR}"
+				FILES "${_file}"
+			)
+	endforeach()	
 endif()
