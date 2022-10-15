@@ -2,7 +2,7 @@
  * File              : strfind.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 21.02.2022
- * Last Modified Date: 22.07.2022
+ * Last Modified Date: 15.10.2022
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -47,6 +47,9 @@ static char * strins(const char *haystack, const char *needle, int pos);
 
 //return new allocated string with contents of haystack replaced all needle matches by replace string
 static char * strarep(const char * haystack, const char * needle, const char * replace);
+
+//create out file copy of in file with all needle replaced by replace and return it's count 
+static int strfrep(FILE *in, FILE *out, const char * needle, const char * replace); 
 
 /**
  * implimation of functions
@@ -204,6 +207,59 @@ strarep(
 	result[i] = '\0';
 	return result;
 }
+
+int 
+strfrep(
+		FILE *in, 
+		FILE *out, 
+		const char * needle, 
+		const char * replace 
+		) 
+
+{
+	int nlen=strlen(needle);
+	int rlen=strlen(replace);
+
+	char buff[nlen];
+	
+	int i, cnt = 0;
+
+    while (1) { 
+        char ch = fgetc(in);
+        if (ch == EOF) { 
+            break; 
+        }
+		
+		if (ch==needle[i]) {
+			buff[i]=ch;
+			i++;
+			if (i==nlen) {
+				//found string matches
+				cnt++;
+				
+				//replace string
+				for (i = 0; i < rlen; ++i) {
+					fputc(replace[i], out);
+				}
+				i=0;
+			}
+		}
+		else {
+			if (i>0) {
+				//print buff	
+				int c=i;
+				for (i = 0; i < c; ++i) {
+					fputc(buff[i], out);
+				}
+			}
+			i=0;
+			fputc(ch,out);
+		}
+	}
+
+	return cnt;
+}
+
 
 
 #ifdef __cplusplus
