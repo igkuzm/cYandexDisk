@@ -49,7 +49,10 @@ static char * strins(const char *haystack, const char *needle, int pos);
 static char * strarep(const char * haystack, const char * needle, const char * replace);
 
 //create out file copy of in file with all needle replaced by replace and return it's count 
-static int strfrep(FILE *in, FILE *out, const char * needle, const char * replace); 
+static int fstrrep(FILE *in, FILE *out, const char * needle, const char * replace); 
+
+//fstrep with filepaths. return -1 if file_in access error, -2 if file_out access error
+static int fpstrrep(const char *file_in, const char *file_out, const char * needle, const char * replace); 
 
 /**
  * implimation of functions
@@ -118,10 +121,8 @@ strrep(
 
 	//allocate result string with enough memory
 	char * result = (char *)malloc(stringlen - len + replacelen + 1);
-	if (result == NULL) {
-		perror("result string malloc");
-		exit(EXIT_FAILURE);
-	}	
+	if (result == NULL)
+		return NULL;
 
 	//replace string
 	int i = 0;
@@ -143,10 +144,8 @@ char * strins(const char *haystack, const char *needle, int pos){
 	char * np = (char *)needle;   //needle pointer
 
 	char *str = (char *)malloc(strlen(haystack) + strlen(needle) + 1); //allocate enough memory
-	if (str == NULL) {
-		perror("str malloc");
-		exit(EXIT_FAILURE);
-	}
+	if (str == NULL) 
+		return NULL;
 		
 	int i = 0;
 	while (*hp) {
@@ -187,10 +186,8 @@ strarep(
 
 	//allocate result string with enough memory
 	char *result = (char *)malloc(i + cnt * (replacelen - needlelen) + 1);
-	if (result == NULL) {
-		perror("result string malloc");
-		exit(EXIT_FAILURE);
-	}
+	if (result == NULL)
+		return NULL;
 
 	//replace search needle string with replace string
 	char *ptr = (char *)haystack; //haystack pointer
@@ -209,7 +206,7 @@ strarep(
 }
 
 int 
-strfrep(
+fstrrep(
 		FILE *in, 
 		FILE *out, 
 		const char * needle, 
@@ -269,6 +266,31 @@ strfrep(
 	return cnt;
 }
 
+int 
+fpstrrep(
+		const char *file_in, 
+		const char *file_out, 
+		const char * needle, 
+		const char * replace
+		)
+{
+	FILE *in = fopen(file_in, "r");
+	if (!in)
+		return -1;
+
+	FILE *out = fopen(file_out, "w");
+	if (!out){
+		fclose(in);
+		return -2;
+	}
+
+	int cnt = fstrrep(in, out, needle, replace);
+
+	fclose(in);
+	fclose(out);
+
+	return cnt;
+}	
 
 
 #ifdef __cplusplus
