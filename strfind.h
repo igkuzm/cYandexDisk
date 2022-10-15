@@ -220,18 +220,25 @@ strfrep(
 	int nlen=strlen(needle);
 	int rlen=strlen(replace);
 
-	char buff[nlen];
+	char buf[nlen];
 	
 	int i, cnt = 0;
 
+	//clear buf
+	for (int i = 0; i < nlen; i++) {
+		buf[i] = 0;
+	}
+
+	i=0;
+
     while (1) { 
-        char ch = fgetc(in);
-        if (ch == EOF) { 
-            break; 
-        }
+		char ch = fgetc(in);
+		if (ch == EOF) { 
+			break; 
+		}
 		
 		if (ch==needle[i]) {
-			buff[i]=ch;
+			buf[i]=ch;
 			i++;
 			if (i==nlen) {
 				//found string matches
@@ -249,7 +256,9 @@ strfrep(
 				//print buff	
 				int c=i;
 				for (i = 0; i < c; ++i) {
-					fputc(buff[i], out);
+					fputc(buf[i], out);
+					//clear buf
+					buf[i] = 0;
 				}
 			}
 			i=0;
