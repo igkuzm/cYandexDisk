@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 04.10.2022
+ * Last Modified Date: 13.03.2023
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -781,17 +781,18 @@ int c_json_to_c_yd_file_t(cJSON *json, c_yd_file_t *file)
 	return 0;
 }
 
-int _c_yandex_disk_ls_parser(cJSON *json, char *error, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
+int _c_yandex_disk_ls_parser(cJSON *json, char *error, void * user_data, int(*callback)(c_yd_file_t file, void * user_data, char * error))
 {
+	c_yd_file_t file;
 	if (!json) { //no json returned
 		if (callback)
-			callback(NULL,user_data,STR("cYandexDisk: %s", error));
+			callback(file,user_data,STR("cYandexDisk: %s", error));
 		return -1;
 	}
 	if (!cJSON_GetObjectItem(json, "path")){ //error to get info of file/directory
 		cJSON *message = cJSON_GetObjectItem(json, "message");			
 		if (callback)
-			callback(NULL,user_data,STR("cYandexDisk: %s", message->valuestring));
+			callback(file,user_data,STR("cYandexDisk: %s", message->valuestring));
 		cJSON_free(json);
 		return  -1;
 	}	
@@ -808,13 +809,12 @@ int _c_yandex_disk_ls_parser(cJSON *json, char *error, void * user_data, int(*ca
 			c_yd_file_t file;
 			c_json_to_c_yd_file_t(item, &file);
 			if (callback)
-				callback(&file, user_data, NULL);				
+				callback(file, user_data, NULL);				
 		}
 	} else { //no items - return file info
-		c_yd_file_t file;
 		c_json_to_c_yd_file_t(json, &file);
 		if (callback)
-			callback(&file, user_data, NULL);
+			callback(file, user_data, NULL);
 	}	
 
 	return 0;
@@ -851,7 +851,7 @@ c_yandex_disk_file_info(
 	return file;
 }
 
-int c_yandex_disk_ls(const char * token, const char * path, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
+int c_yandex_disk_ls(const char * token, const char * path, void * user_data, int(*callback)(c_yd_file_t file, void * user_data, char * error))
 {
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);	
@@ -862,7 +862,7 @@ int c_yandex_disk_ls(const char * token, const char * path, void * user_data, in
 	return _c_yandex_disk_ls_parser(json, error, user_data, callback);
 }
 
-int c_yandex_disk_ls_public(const char * token, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
+int c_yandex_disk_ls_public(const char * token, void * user_data, int(*callback)(c_yd_file_t file, void * user_data, char * error))
 {
 	char *error = NULL;
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/public", NULL, token, &error, NULL);
@@ -1051,7 +1051,7 @@ int c_yandex_disk_unpublish(const char * token, const char * path, char **error)
 	return _c_yandex_disk_standart_parser(json, error);
 }
 
-int c_yandex_disk_public_ls(const char * token, const char * public_key, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, char * error))
+int c_yandex_disk_public_ls(const char * token, const char * public_key, void * user_data, int(*callback)(c_yd_file_t file, void * user_data, char * error))
 {
 	char public_key_arg[BUFSIZ];
 	sprintf(public_key_arg, "public_key=%s", public_key);	

@@ -2,7 +2,7 @@
  * File              : cYandexDisk.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 21.07.2022
+ * Last Modified Date: 13.03.2023
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 /*
@@ -166,7 +166,7 @@ int c_yandex_disk_ls(
 		const char * path,		   //path in yandex disk (file or directory)
 		void * user_data,		   //pointer of data return from callback 
 		int(*callback)(			   //callback function
-			c_yd_file_t *file,	   //information of resource 
+			c_yd_file_t file,	   //information of resource 
 			void * user_data,	   //pointer of data return from callback 
 			char * error		   //error
 		)
@@ -177,7 +177,7 @@ int c_yandex_disk_ls_public(
 		const char * access_token, //authorization token
 		void * user_data,		   //pointer of data return from callback 
 		int(*callback)(			   //callback function
-			c_yd_file_t *file,     //information of resource 
+			c_yd_file_t file,      //information of resource 
 			void * user_data,	   //pointer of data return from callback 
 			char * error		   //error
 		)
@@ -233,7 +233,7 @@ int c_yandex_disk_public_ls(
 		const char * public_key,   //key or url of public resource 
 		void * user_data,          //pointer of data to transfer throw callback 
 		int(*callback)(			   //callback function
-			c_yd_file_t *file,     //information of resource
+			c_yd_file_t file,      //information of resource
 			void * user_data,	   //pointer of data return from callback 
 			char * error		   //error
 		)
