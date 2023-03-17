@@ -2,13 +2,14 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 13.03.2023
+ * Last Modified Date: 17.03.2023
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
 #include "cYandexDisk.h"
 #include <curl/curl.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -253,17 +254,18 @@ int curl_download_file(const char * filename, const char * url, void * user_data
     return 0;
 }
 
-struct curl_download_data_t {
+struct curl_data_t {
 	void * data;
 	size_t size;
+	size_t total;
 };
 
-void init_data(struct curl_download_data_t *t) {
+void init_data(struct curl_data_t *t) {
 	t->size = 0;
 	t->data = MALLOC(8);
 }
 
-size_t curl_download_data_writefunc(void *data, size_t size, size_t nmemb, struct curl_download_data_t *t)
+size_t curl_download_data_writefunc(void *data, size_t size, size_t nmemb, struct curl_data_t *t)
 {
 	size_t realsize = size * nmemb;
 	size_t new_len = t->size + realsize;
@@ -283,7 +285,7 @@ size_t curl_download_data(const char * url, void * user_data, int (*callback)(si
 	CURL *curl;
     CURLcode res;
 
-	struct curl_download_data_t t;
+	struct curl_data_t t;
 	init_data(&t);
 
     curl = curl_easy_init();
@@ -408,16 +410,29 @@ int curl_upload_file(const char * filename, const char * url, void *user_data, i
 	return 0;
 }
 
-size_t curl_upload_data_readfunc(char *buffer, size_t size, size_t nmemb, void * data){
-	size_t real_size = size*nmemb;
-	memcpy(buffer, data, real_size);
-	return real_size;
+size_t curl_upload_data_readfunc(char *ptr, size_t size, size_t nmemb, struct curl_data_t *t)
+{
+	size_t s = size * nmemb;
+	if (s > t->total)
+		s = t->total;
+
+	memcpy(ptr, &(t->data[t->size]), s);
+	
+	t->size += s;
+	t->total -= s;
+
+	return s;
 }
 
 int curl_upload_data(void * data, size_t size, const char * url, void *user_data, int (*callback)(size_t size, void *user_data, char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	CURL *curl;
 	CURLcode res;
+
+	struct curl_data_t t;	
+	t.data = data;
+	t.size = 0;
+	t.total = size;
 
 	curl = curl_easy_init();
 	if(curl) {
@@ -428,7 +443,7 @@ int curl_upload_data(void * data, size_t size, const char * url, void *user_data
 		curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
 
 		/* set where to read from (on Windows you need to use READFUNCTION too) */
-		curl_easy_setopt(curl, CURLOPT_READDATA, data);
+		curl_easy_setopt(curl, CURLOPT_READDATA, &t);
 		curl_easy_setopt(curl, CURLOPT_READFUNCTION, curl_upload_data_readfunc);
 
 		/* and give the size of the upload (optional) */
