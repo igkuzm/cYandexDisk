@@ -254,18 +254,12 @@ int curl_download_file(const char * filename, const char * url, void * user_data
     return 0;
 }
 
-struct curl_data_t {
+struct memory {
 	void * data;
 	size_t size;
-	size_t total;
 };
 
-void init_data(struct curl_data_t *t) {
-	t->size = 0;
-	t->data = MALLOC(8);
-}
-
-size_t curl_download_data_writefunc(void *data, size_t size, size_t nmemb, struct curl_data_t *t)
+size_t curl_download_data_writefunc(void *data, size_t size, size_t nmemb, struct memory *t)
 {
 	size_t realsize = size * nmemb;
 	size_t new_len = t->size + realsize;
@@ -285,8 +279,9 @@ size_t curl_download_data(const char * url, void * user_data, int (*callback)(si
 	CURL *curl;
     CURLcode res;
 
-	struct curl_data_t t;
-	init_data(&t);
+	struct memory t;
+	t.data = MALLOC(8);
+	t.size = 0;
 
     curl = curl_easy_init();
     if (curl) {
@@ -410,16 +405,17 @@ int curl_upload_file(const char * filename, const char * url, void *user_data, i
 	return 0;
 }
 
-size_t curl_upload_data_readfunc(char *ptr, size_t size, size_t nmemb, struct curl_data_t *t)
+size_t curl_upload_data_readfunc(char *ptr, size_t size, size_t nmemb, struct memory *t)
 {
 	size_t s = size * nmemb;
-	if (s > t->total)
-		s = t->total;
-
-	memcpy(ptr, &(t->data[t->size]), s);
 	
-	t->size += s;
-	t->total -= s;
+	if (s > t->size)
+		s = t->size;
+
+	memcpy(ptr, t->data, s);
+	
+	t->data += s;
+	t->size -= s;
 
 	return s;
 }
@@ -429,10 +425,9 @@ int curl_upload_data(void * data, size_t size, const char * url, void *user_data
 	CURL *curl;
 	CURLcode res;
 
-	struct curl_data_t t;	
+	struct memory t;	
 	t.data = data;
-	t.size = 0;
-	t.total = size;
+	t.size = size;
 
 	curl = curl_easy_init();
 	if(curl) {
