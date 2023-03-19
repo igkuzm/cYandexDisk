@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 17.03.2023
+ * Last Modified Date: 19.03.2023
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "cJSON.h"
-#include "uuid4/uuid4.h"
+#include "uuid.h"
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pthread.h>
