@@ -2,7 +2,7 @@
  * File              : uuid.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 22.02.2022
- * Last Modified Date: 21.01.2023
+ * Last Modified Date: 19.03.2023
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -22,7 +22,7 @@ extern "C"{
 #include <stdlib.h>
 
 //allocate new uuid string 
-static char * uuid_new();
+static int uuid_new(char uuid[37]);
 
 
 /*
@@ -258,19 +258,15 @@ bool UUID4_PREFIX(to_s)(const UUID4_T uuid, char* out, int capacity)
 	return true;
 }
 
-char * uuid_new(){
-	//create uuid
-	char * uuid = malloc(37);
-	if (!uuid)
-		return NULL;
+int uuid_new(char uuid[37]){
 	UUID4_STATE_T state; UUID4_T identifier;
 	uuid4_seed(&state);
 	uuid4_gen(&state, &identifier);
 	if (!uuid4_to_s(identifier, uuid, 37)){
-		return NULL;
+		return -1;
 	}
 
-	return uuid;
+	return 0;
 }
 
 
