@@ -49,7 +49,7 @@ elseif(WIN32)
 	endif()
 endif()
 
-add_library(${TARGET} STATIC cYandexDisk.c cJSON.c uuid4/uuid4.c ${ADDSRC})
+add_library(${TARGET} STATIC cYandexDisk.c cJSON.c ${ADDSRC})
 target_link_libraries(${TARGET} curl z)
 target_link_directories(${TARGET} PRIVATE ${ADDDIRS})
 
