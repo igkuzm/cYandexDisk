@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "cJSON.h"
-#include "uuid.h"
+#include "uuid4.h"
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pthread.h>
