@@ -2,7 +2,7 @@
  * File              : cYandexDisk.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 13.03.2023
+ * Last Modified Date: 20.03.2023
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 /*
@@ -60,7 +60,7 @@ typedef struct c_yd_file_t {
 
 
 //get info of file/directory
-c_yd_file_t *
+int
 c_yandex_disk_file_info(
 		const char * access_token, 
 		const char * path,

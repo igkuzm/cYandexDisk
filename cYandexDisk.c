@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 19.03.2023
+ * Last Modified Date: 20.03.2023
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -830,7 +830,7 @@ int _c_yandex_disk_ls_parser(cJSON *json, char *error, void * user_data, int(*ca
 	return 0;
 }	
 
-c_yd_file_t *
+int
 c_yandex_disk_file_info(
 		const char * token, 
 		const char * path,
@@ -848,17 +848,17 @@ c_yandex_disk_file_info(
 	}
 
 	if (!json) { //no json returned
-		return NULL;
+		return -1;
 	}
 	if (!cJSON_GetObjectItem(json, "path")){ //error to get info of file/directory
 		cJSON *message = cJSON_GetObjectItem(json, "error");
 		ERRORSTR(_error, "%s", message->valuestring);
 		cJSON_free(json);
-		return NULL;
+		return -1;
 	}	
 	
 	c_json_to_c_yd_file_t(json, file);
-	return file;
+	return 0;
 }
 
 int c_yandex_disk_ls(const char * token, const char * path, void * user_data, int(*callback)(c_yd_file_t file, void * user_data, char * error))
