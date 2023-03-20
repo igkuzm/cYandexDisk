@@ -49,7 +49,11 @@ elseif(WIN32)
 	endif()
 endif()
 
-add_library(${TARGET} STATIC cYandexDisk.c cJSON.c ${ADDSRC})
+if(APPLE)
+	SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -framework Foundation")
+endif()
+
+add_library(${TARGET} STATIC cYandexDisk.c cJSON.c uuid.c ${ADDSRC})
 target_link_libraries(${TARGET} curl z)
 target_link_directories(${TARGET} PRIVATE ${ADDDIRS})
 
