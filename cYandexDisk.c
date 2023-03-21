@@ -843,7 +843,8 @@ c_yandex_disk_file_info(
 		return -1;
 	}	
 	
-	c_json_to_c_yd_file_t(json, file);
+	if (file)
+		c_json_to_c_yd_file_t(json, file);
 	return 0;
 }
 
