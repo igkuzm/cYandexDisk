@@ -2,7 +2,7 @@
  * File              : cYandexDisk.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 20.03.2023
+ * Last Modified Date: 21.03.2023
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 /*
@@ -16,20 +16,20 @@ extern "C" {
 #include <stdbool.h>
 #include <time.h>
 
-//get URL with verification code request
+// allocate and return URL with verification code request
 char * c_yandex_disk_url_to_ask_for_verification_code(
 		const char *client_id,    //id of application in Yandex
 		char **error			  //error
 );
 
-//parse html and find verification code from Yandex
+// parse html, allocate and return verification code from Yandex
 char * c_yandex_disk_verification_code_from_html(
 		const char *html,         //html to search verification code
 		char **error		      //error
 );
 
 
-//get authorization token
+// get authorization token
 void c_yandex_disk_get_token(
 		const char *verification_code, 
 		const char *client_id,    //id of application in Yandex
@@ -45,6 +45,7 @@ void c_yandex_disk_get_token(
 			)
 );
 
+/* yandex disk file structure */
 typedef struct c_yd_file_t {
 	char   name[256];			//name of resource
 	char   type[8];				//type of resource (file, directory)
@@ -59,9 +60,8 @@ typedef struct c_yd_file_t {
 } c_yd_file_t;
 
 
-//get info of file/directory
-int
-c_yandex_disk_file_info(
+// get info of file/directory
+int c_yandex_disk_file_info(
 		const char * access_token, 
 		const char * path,
 		c_yd_file_t *file,
@@ -72,7 +72,7 @@ c_yandex_disk_file_info(
 //upload file to Yandex Disk
 int c_yandex_disk_upload_file(
 		const char * access_token, //authorization token
-		const char * filename,     //filename to upload
+		FILE *fp,                  //pointer to file read stream
 		const char * path,         //path in yandex disk to save file - start with app:/
 		bool overwrite,			   //overwrite distination 
 		bool wait_finish,
@@ -119,7 +119,7 @@ int c_yandex_disk_upload_data(
 //Download file from Yandex Disk
 int c_yandex_disk_download_file(             
 		const char * access_token, //authorization token
-		const char * filename,     //filename to save downloaded file
+		FILE *fp,                  //pointer to file write stream
 		const char * path,         //path in yandex disk of file to download - start with app:/
 		bool wait_finish,
 		void *user_data,           //pointer of data to transfer throw callback
@@ -166,7 +166,7 @@ int c_yandex_disk_ls(
 		const char * path,		   //path in yandex disk (file or directory)
 		void * user_data,		   //pointer of data return from callback 
 		int(*callback)(			   //callback function
-			c_yd_file_t file,	   //information of resource 
+			c_yd_file_t *file,	   //information of resource 
 			void * user_data,	   //pointer of data return from callback 
 			char * error		   //error
 		)
@@ -177,13 +177,13 @@ int c_yandex_disk_ls_public(
 		const char * access_token, //authorization token
 		void * user_data,		   //pointer of data return from callback 
 		int(*callback)(			   //callback function
-			c_yd_file_t file,      //information of resource 
+			c_yd_file_t *file,     //information of resource 
 			void * user_data,	   //pointer of data return from callback 
 			char * error		   //error
 		)
 );
 
-//get url of file
+//allocate and return url of file
 char *c_yandex_disk_file_url(const char * access_token, const char * path, char **error);
 
 //create directory
@@ -233,7 +233,7 @@ int c_yandex_disk_public_ls(
 		const char * public_key,   //key or url of public resource 
 		void * user_data,          //pointer of data to transfer throw callback 
 		int(*callback)(			   //callback function
-			c_yd_file_t file,      //information of resource
+			c_yd_file_t *file,     //information of resource
 			void * user_data,	   //pointer of data return from callback 
 			char * error		   //error
 		)
@@ -242,7 +242,7 @@ int c_yandex_disk_public_ls(
 //Download public resources
 int c_yandex_disk_download_public_resource(             
 		const char * access_token, //authorization token
-		const char * filename,     //filename to save downloaded file
+		FILE *fp,                  //pointer to file write stream
 		const char * public_key,   //key or url of public resource 
 		bool wait_finish,
 		void *user_data,           //pointer of data to transfer throw callback
