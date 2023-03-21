@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 20.03.2023
+ * Last Modified Date: 21.03.2023
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -28,6 +28,8 @@ char * strptime(const char* s, const char* f, struct tm* tm);
 
 #define API_URL "https://cloud-api.yandex.net"
 #define VERIFY_SSL 0
+
+#define YD_ANSWER_LIMIT 20
 
 //memory allocation helpers
 #define MALLOC(size) ({void* const ___p = malloc(size); if(!___p) {perror("Malloc"); exit(EXIT_FAILURE);} ___p;})
@@ -502,6 +504,8 @@ cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const
 		}
 		va_end(argv);
 
+		printf("REQUEST_STRING: %s\n", requestString);
+
 		curl_easy_setopt(curl, CURLOPT_URL, requestString);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, http_method);		
 		curl_easy_setopt(curl, CURLOPT_HEADER, 0);
@@ -814,6 +818,8 @@ int _c_yandex_disk_ls_parser(cJSON *json, char *error, void * user_data, int(*ca
 		items = cJSON_GetObjectItem(json, "items");
 	if (items) { //we have items in directory
 		int count = cJSON_GetArraySize(items);
+		if (!count)
+			return 1;
 		for (int i = 0; i < count; ++i) {
 			cJSON *item = cJSON_GetArrayItem(items, i);
 			c_yd_file_t file;
@@ -829,7 +835,6 @@ int _c_yandex_disk_ls_parser(cJSON *json, char *error, void * user_data, int(*ca
 
 	return 0;
 }	
-
 int
 c_yandex_disk_file_info(
 		const char * token, 
@@ -866,18 +871,35 @@ int c_yandex_disk_ls(const char * token, const char * path, void * user_data, in
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);	
 
-	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources", NULL, token, &error, path_arg, NULL);
+	int i = 0, r = 0, l = YD_ANSWER_LIMIT;
+	char limit[BUFSIZ], offset[BUFSIZ];
 	
-	return _c_yandex_disk_ls_parser(json, error, user_data, callback);
+	sprintf(limit, "limit=%d", l);
+	
+	while	(r == 0) {
+		sprintf(offset, "offset=%d", i++ * l);
+		char *error = NULL;
+		cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources", NULL, token, &error, path_arg, limit, offset, NULL);
+		r = _c_yandex_disk_ls_parser(json, error, user_data, callback);
+	}
+	return r;
 }
 
 int c_yandex_disk_ls_public(const char * token, void * user_data, int(*callback)(c_yd_file_t file, void * user_data, char * error))
 {
-	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/public", NULL, token, &error, NULL);
 	
-	return _c_yandex_disk_ls_parser(json, error, user_data, callback);
+	int i = 0, r = 0, l = YD_ANSWER_LIMIT;
+	char limit[BUFSIZ], offset[BUFSIZ];
+	
+	sprintf(limit, "limit=%d", l);
+	
+	while	(r == 0) {
+		sprintf(offset, "offset=%d", i++ * l);
+		char *error = NULL;
+		cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/public", NULL, token, &error, limit, offset, NULL);
+		r = _c_yandex_disk_ls_parser(json, error, user_data, callback);
+	}
+	return r;
 }
 
 int _c_yandex_disk_standart_parser(cJSON *json, char **error){
@@ -1065,10 +1087,19 @@ int c_yandex_disk_public_ls(const char * token, const char * public_key, void * 
 {
 	char public_key_arg[BUFSIZ];
 	sprintf(public_key_arg, "public_key=%s", public_key);	
+
+	int i = 0, r = 0, l = YD_ANSWER_LIMIT;
+	char limit[BUFSIZ], offset[BUFSIZ];
 	
-	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources", NULL, token, &error, public_key_arg, NULL);
-	return _c_yandex_disk_ls_parser(json, error, user_data, callback);
+	sprintf(limit, "limit=%d", l);
+	
+	while	(r == 0) {
+		sprintf(offset, "offset=%d", i++ * l);
+		char *error = NULL;
+		cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources", NULL, token, &error, public_key_arg, limit, offset, NULL);
+		r = _c_yandex_disk_ls_parser(json, error, user_data, callback);
+	}
+	return r;
 }
 
 int c_yandex_disk_public_cp(const char * token, const char * public_key, const char * to, void *user_data, int(*callback)(void *user_data, char *error))
