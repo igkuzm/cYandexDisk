@@ -504,8 +504,6 @@ cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const
 		}
 		va_end(argv);
 
-		printf("REQUEST_STRING: %s\n", requestString);
-
 		curl_easy_setopt(curl, CURLOPT_URL, requestString);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, http_method);		
 		curl_easy_setopt(curl, CURLOPT_HEADER, 0);
