@@ -10,7 +10,7 @@ libkdata2_a_SOURCES = \
 CURL_LINK =
 
 if WINDOWS
-if I386
+if X86_64
 		CURL_LINKS += curl/windows/win64/lib/libcurl.dll.a
 		INCLUDE += curl/windows/win64/include
 endif
