@@ -2,7 +2,7 @@
  * File              : cYandexDisk.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 14.05.2023
+ * Last Modified Date: 25.05.2023
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 /*
@@ -58,7 +58,7 @@ void c_yandex_disk_url_to_ask_for_verification_code_for_user(
 			const char * verification_url,
 			int interval,
 			int expires_in,
-			char * error
+			const char * error
 			)
 );
 
@@ -72,10 +72,10 @@ void c_yandex_disk_get_token_from_user(
 		void * user_data,
 		int (*callback)(
 			void * user_data,
-			char * access_token,
+			const char * access_token,
 			time_t expires_in,
-			char * refresh_token,
-			char * error
+			const char * refresh_token,
+			const char * error
 			)
 );
 
@@ -115,7 +115,7 @@ int c_yandex_disk_upload_file(
 		int (*callback)(		   //callback function when upload finished 
 			size_t size,           //size of uploaded file
 			void *user_data,       //pointer of data return from callback
-			char *error			   //error
+			const char *error	   //error
 		), 
 		void *clientp,			   //data pointer to transfer trow progress callback
 		int (*progress_callback)(  //progress callback function
@@ -139,7 +139,7 @@ int c_yandex_disk_upload_data(
 		int (*callback)(		   //callback function when upload finished 
 			size_t size,           //size of uploaded file
 			void *user_data,       //pointer of data return from callback
-			char *error			   //error
+			const char *error	   //error
 		), 
 		void *clientp,			   //data pointer to transfer trow progress callback
 		int (*progress_callback)(  //progress callback function
@@ -161,7 +161,7 @@ int c_yandex_disk_download_file(
 		int (*callback)(		   //callback function when upload finished 
 			size_t size,           //size of downloaded file
 			void *user_data,       //pointer of data return from callback
-			char *error			   //error
+			const char *error	   //error
 		), 
 		void *clientp,			   //data pointer to transfer trow progress callback
 		int (*progress_callback)(  //progress callback function
@@ -183,7 +183,7 @@ int c_yandex_disk_download_data(
 			size_t size,           //size of downloaded data
 			void *data,			   //pointer of downloaded data
 			void *user_data,       //pointer of data return from callback
-			char *error			   //error
+			const char *error	   //error
 		), 
 		void *clientp,			   //data pointer to transfer trow progress callback
 		int (*progress_callback)(  //progress callback function
@@ -203,7 +203,7 @@ int c_yandex_disk_ls(
 		int(*callback)(			   //callback function
 			c_yd_file_t *file,	   //information of resource 
 			void * user_data,	   //pointer of data return from callback 
-			char * error		   //error
+			const char * error	   //error
 		)
 );
 
@@ -214,7 +214,7 @@ int c_yandex_disk_ls_public(
 		int(*callback)(			   //callback function
 			c_yd_file_t *file,     //information of resource 
 			void * user_data,	   //pointer of data return from callback 
-			char * error		   //error
+			const char * error	   //error
 		)
 );
 
@@ -239,7 +239,7 @@ int c_yandex_disk_cp(
 		void *user_data,		   //pointer of data return from callback 
 		int(*callback)(			   //callback function
 			void *user_data,       //pointer of data return from callback 
-			char *error			   //error
+			const char *error	   //error
 		)
 );
 
@@ -252,7 +252,7 @@ int c_yandex_disk_mv(
 		void *user_data,		   //pointer of data return from callback 
 		int(*callback)(			   //callback function
 			void *user_data,       //pointer of data return from callback 
-			char *error			   //error
+			const char *error	   //error
 		)
 );
 
@@ -270,7 +270,7 @@ int c_yandex_disk_public_ls(
 		int(*callback)(			   //callback function
 			c_yd_file_t *file,     //information of resource
 			void * user_data,	   //pointer of data return from callback 
-			char * error		   //error
+			const char * error	   //error
 		)
 );	
 
@@ -284,7 +284,7 @@ int c_yandex_disk_download_public_resource(
 		int (*callback)(		   //callback function when upload finished 
 			size_t size,           //size of downloaded file
 			void *user_data,       //pointer of data return from callback
-			char *error			   //error
+			const char *error      //error
 		), 
 		void *clientp,			   //data pointer to transfer trow progress callback
 		int (*progress_callback)(  //progress callback function
@@ -304,7 +304,7 @@ int c_yandex_disk_public_cp(
 		void *user_data,		   //pointer of data return from callback 
 		int(*callback)(			   //callback function
 			void *user_data,       //pointer of data return from callback 
-			char *error			   //error
+			const char *error	   //error
 		)
 );
 
