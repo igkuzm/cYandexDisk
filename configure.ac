@@ -1,9 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT
-AC_CONFIG_SRCDIR([configure.ac])
-AM_INIT_AUTOMAKE(libcYandexDisk, 0.1)
-AM_MAINTAINER_MODE
+AC_INIT([libcYandexDisk], [1.0])
+AM_INIT_AUTOMAKE
 
 LT_INIT
 AC_CONFIG_MACRO_DIRS([m4])
