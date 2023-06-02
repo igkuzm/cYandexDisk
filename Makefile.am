@@ -19,6 +19,7 @@ CURL_LINK = -lcurl -L`pwd`/curl/windows/win64/bin/libcurl.dll
 endif
 
 if WINDOWS
+libcYandexDisk_la_SOURCES += strptime.cc
 libcYandexDisk_la_LDFLAGS = -Wl,-no-undefined
 else
 CURL_LINK = -lcurl
