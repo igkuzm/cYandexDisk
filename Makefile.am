@@ -6,19 +6,20 @@ libcYandexDisk_la_SOURCES = \
 	  cJSON.c\
 	  uuid4.c
 
-CURL_LINK =
+if WIN32
+AM_CFLAGS = \
+	-Icurl/windows/win32/include
+CURL_LINK = curl/windows/win32/lib/libcurl.dll.a
+endif
 
-if WINDOWS
-if X86_64
-		CURL_LINKS += curl/windows/win64/lib/libcurl.dll.a
-		INCLUDES += curl/windows/win64/include
+if WIN64
+AM_CFLAGS = \
+	-Icurl/windows/win64/include
+CURL_LINK = curl/windows/win64/lib/libcurl.dll.a
 endif
-if I386
-		CURL_LINKS += curl/windows/win32/lib/libcurl.dll.a
-		INCLUDES += curl/windows/win32/include
-endif
-else
-	CURL_LINK += -lcurl
+
+if !WINDOWS
+CURL_LINK = -lcurl
 endif
 
 libcYandexDisk_la_LIBADD = $(CURL_LINK)
