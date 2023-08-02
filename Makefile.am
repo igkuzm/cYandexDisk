@@ -6,6 +6,8 @@ libcYandexDisk_la_SOURCES = \
 	  	cJSON.c\
 	  	uuid4.c
 
+libcYandexDisk_la_CFLAGS = -fPIC
+
 if WIN32
 AM_CFLAGS = \
 	-Icurl/windows/win32/include
