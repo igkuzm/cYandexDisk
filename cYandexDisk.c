@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 25.05.2023
+ * Last Modified Date: 09.08.2023
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -65,6 +65,7 @@ c_yandex_disk_verification_code_from_html(
 	};
 	const char *pattern_ends[] = {
 		"&",
+		"b",
 		"<"
 	};	
 
