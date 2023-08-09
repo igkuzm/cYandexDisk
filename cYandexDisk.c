@@ -65,7 +65,6 @@ c_yandex_disk_verification_code_from_html(
 	};
 	const char *pattern_ends[] = {
 		"&",
-		"b",
 		"<"
 	};	
 
@@ -88,6 +87,7 @@ c_yandex_disk_verification_code_from_html(
 			//allocate code and copy
 			char * code = MALLOC(clen + 1);
 			strncpy(code, &html[start + len], clen);
+			code[clen] = 0;
 
 			return code;
 		}
