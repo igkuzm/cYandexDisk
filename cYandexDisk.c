@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 09.08.2023
+ * Last Modified Date: 10.08.2023
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -991,7 +991,7 @@ int c_json_to_c_yd_file_t(cJSON *json, c_yd_file_t *file)
 	return 0;
 }
 
-int _c_yandex_disk_ls_parser(cJSON *json, char *error, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, const char * error))
+int _c_yandex_disk_ls_parser(cJSON *json, char *error, void * user_data, int(*callback)(const c_yd_file_t *file, void * user_data, const char * error))
 {
 	if (!json) { //no json returned
 		if (callback)
@@ -1063,7 +1063,7 @@ c_yandex_disk_file_info(
 	return 0;
 }
 
-int c_yandex_disk_ls(const char * token, const char * path, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, const char * error))
+int c_yandex_disk_ls(const char * token, const char * path, void * user_data, int(*callback)(const c_yd_file_t *file, void * user_data, const char * error))
 {
 	char path_arg[BUFSIZ];
 	sprintf(path_arg, "path=%s", path);	
@@ -1082,7 +1082,7 @@ int c_yandex_disk_ls(const char * token, const char * path, void * user_data, in
 	return r;
 }
 
-int c_yandex_disk_ls_public(const char * token, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, const char * error))
+int c_yandex_disk_ls_public(const char * token, void * user_data, int(*callback)(const c_yd_file_t *file, void * user_data, const char * error))
 {
 	
 	int i = 0, r = 0, l = YD_ANSWER_LIMIT;
@@ -1280,7 +1280,7 @@ int c_yandex_disk_unpublish(const char * token, const char * path, char **error)
 	return _c_yandex_disk_standart_parser(json, error);
 }
 
-int c_yandex_disk_public_ls(const char * token, const char * public_key, void * user_data, int(*callback)(c_yd_file_t *file, void * user_data, const char * error))
+int c_yandex_disk_public_ls(const char * token, const char * public_key, void * user_data, int(*callback)(const c_yd_file_t *file, void * user_data, const char * error))
 {
 	char public_key_arg[BUFSIZ];
 	sprintf(public_key_arg, "public_key=%s", public_key);	

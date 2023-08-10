@@ -2,12 +2,15 @@
  * File              : cYandexDisk.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 25.05.2023
+ * Last Modified Date: 10.08.2023
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 /*
  * C API for Yandex Disk
  */
+#ifndef C_YANDEX_DISK
+#define C_YANDEX_DISK
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -201,7 +204,7 @@ int c_yandex_disk_ls(
 		const char * path,		   //path in yandex disk (file or directory)
 		void * user_data,		   //pointer of data return from callback 
 		int(*callback)(			   //callback function
-			c_yd_file_t *file,	   //information of resource 
+			const c_yd_file_t *file,	   //information of resource 
 			void * user_data,	   //pointer of data return from callback 
 			const char * error	   //error
 		)
@@ -212,7 +215,7 @@ int c_yandex_disk_ls_public(
 		const char * access_token, //authorization token
 		void * user_data,		   //pointer of data return from callback 
 		int(*callback)(			   //callback function
-			c_yd_file_t *file,     //information of resource 
+			const c_yd_file_t *file,     //information of resource 
 			void * user_data,	   //pointer of data return from callback 
 			const char * error	   //error
 		)
@@ -268,7 +271,7 @@ int c_yandex_disk_public_ls(
 		const char * public_key,   //key or url of public resource 
 		void * user_data,          //pointer of data to transfer throw callback 
 		int(*callback)(			   //callback function
-			c_yd_file_t *file,     //information of resource
+			const c_yd_file_t *file,     //information of resource
 			void * user_data,	   //pointer of data return from callback 
 			const char * error	   //error
 		)
@@ -308,7 +311,9 @@ int c_yandex_disk_public_cp(
 		)
 );
 
-
 #ifdef __cplusplus
 }  /* end of the 'extern "C"' block */
 #endif
+
+#endif /* ifndef C_YANDEX_DISK */
+
