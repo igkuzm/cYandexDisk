@@ -115,7 +115,8 @@ int c_yandex_disk_upload_file(
 		bool overwrite,			   //overwrite distination 
 		bool wait_finish,
 		void *user_data,           //pointer of data to transfer throw callback
-		int (*callback)(		   //callback function when upload finished 
+		void (*callback)(		   //callback function when upload finished 
+			FILE *fp,            
 			size_t size,           //size of uploaded file
 			void *user_data,       //pointer of data return from callback
 			const char *error	   //error
@@ -139,7 +140,8 @@ int c_yandex_disk_upload_data(
 		bool overwrite,			   //overwrite distination 
 		bool wait_finish,
 		void *user_data,           //pointer of data to transfer throw callback
-		int (*callback)(		   //callback function when upload finished 
+		void (*callback)(		   //callback function when upload finished 
+			void *data,
 			size_t size,           //size of uploaded file
 			void *user_data,       //pointer of data return from callback
 			const char *error	   //error
@@ -161,7 +163,8 @@ int c_yandex_disk_download_file(
 		const char * path,         //path in yandex disk of file to download - start with app:/
 		bool wait_finish,
 		void *user_data,           //pointer of data to transfer throw callback
-		int (*callback)(		   //callback function when upload finished 
+		void (*callback)(		   //callback function when upload finished 
+			FILE *fp,
 			size_t size,           //size of downloaded file
 			void *user_data,       //pointer of data return from callback
 			const char *error	   //error
@@ -182,9 +185,9 @@ int c_yandex_disk_download_data(
 		const char * path,         //path in yandex disk of file to download - start with app:/
 		bool wait_finish,
 		void *user_data,           //pointer of data to transfer throw callback
-		int (*callback)(		   //callback function when upload finished 
-			size_t size,           //size of downloaded data
+		void (*callback)(		   //callback function when upload finished 
 			void *data,			   //pointer of downloaded data
+			size_t size,           //size of downloaded data
 			void *user_data,       //pointer of data return from callback
 			const char *error	   //error
 		), 
@@ -284,7 +287,29 @@ int c_yandex_disk_download_public_resource(
 		const char * public_key,   //key or url of public resource 
 		bool wait_finish,
 		void *user_data,           //pointer of data to transfer throw callback
-		int (*callback)(		   //callback function when upload finished 
+		void (*callback)(		   //callback function when upload finished 
+			FILE *fp,
+			size_t size,           //size of downloaded file
+			void *user_data,       //pointer of data return from callback
+			const char *error      //error
+		), 
+		void *clientp,			   //data pointer to transfer trow progress callback
+		int (*progress_callback)(  //progress callback function
+			void *clientp,		   //data pointer return from progress function
+			double dltotal,        //downloaded total size
+			double dlnow,		   //downloaded size
+			double ultotal,        //uploaded total size
+			double ulnow           //uploaded size
+		)
+);
+
+int c_yandex_disk_download_public_resource_data(             
+		const char * access_token, //authorization token
+		const char * public_key,   //key or url of public resource 
+		bool wait_finish,
+		void *user_data,           //pointer of data to transfer throw callback
+		void (*callback)(		   //callback function when upload finished 
+			void *data,
 			size_t size,           //size of downloaded file
 			void *user_data,       //pointer of data return from callback
 			const char *error      //error
