@@ -705,6 +705,7 @@ cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const
 		curl_easy_setopt(curl, CURLOPT_URL, requestString);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, http_method);		
 		curl_easy_setopt(curl, CURLOPT_HEADER, 0);
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);		
 
 		/* enable verbose for easier tracing */
 		/*curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);		*/
