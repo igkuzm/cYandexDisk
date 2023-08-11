@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 10.08.2023
+ * Last Modified Date: 11.08.2023
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -1334,3 +1334,43 @@ int c_yandex_disk_public_cp(const char * token, const char * public_key, const c
 			callback(user_data, error);
 	return _c_yandex_disk_async_parser(json, token, user_data, callback);
 }
+
+int c_yandex_disk_trash_ls(
+		const char * token, 
+		void * user_data,          
+		int(*callback)(			       
+			const c_yd_file_t *file, 
+			void * user_data,	       
+			const char * error)
+		)
+{
+	int i = 0, r = 0, l = YD_ANSWER_LIMIT;
+	char limit[BUFSIZ], offset[BUFSIZ];
+	
+	sprintf(limit, "limit=%d", l);
+	
+	while	(r == 0) {
+		sprintf(offset, "offset=%d", i++ * l);
+		char *error = NULL;
+		cJSON *json = c_yandex_disk_api("GET", "v1/disk/trash/resources", NULL, token, &error, limit, offset, NULL);
+		r = _c_yandex_disk_ls_parser(json, error, user_data, callback);
+	}
+	return r;
+
+}	
+
+int c_yandex_disk_trash_restore(const char * token, const char * path, char **error)
+{
+	char path_arg[BUFSIZ];
+	sprintf(path_arg, "path=%s", path);	
+	cJSON *json = c_yandex_disk_api("PUT", "v1/disk/trash/resources", NULL, token, error, path_arg, NULL);
+	return _c_yandex_disk_standart_parser(json, error);
+}
+
+int c_yandex_disk_trash_empty(const char * token, char **error)
+{
+	cJSON *json = c_yandex_disk_api("DELETE", "v1/disk/trash/resources", NULL, token, error, NULL);
+	return _c_yandex_disk_standart_parser(json, error);
+}
+
+

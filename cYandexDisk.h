@@ -2,7 +2,7 @@
  * File              : cYandexDisk.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 10.08.2023
+ * Last Modified Date: 11.08.2023
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 /*
@@ -335,6 +335,23 @@ int c_yandex_disk_public_cp(
 			const char *error	   //error
 		)
 );
+
+//get information of trash resource
+int c_yandex_disk_trash_ls(
+		const char * access_token, //authorization token
+		void * user_data,          //pointer of data to transfer throw callback 
+		int(*callback)(			       //callback function
+			const c_yd_file_t *file, //information of resource
+			void * user_data,	       //pointer of data return from callback 
+			const char * error	     //error
+		)
+);	
+
+//restore removed resource
+int c_yandex_disk_trash_restore(const char * access_token, const char * path, char **error);
+
+//clear trash - remove all files
+int c_yandex_disk_trash_empty(const char * access_token, char **error);
 
 #ifdef __cplusplus
 }  /* end of the 'extern "C"' block */
