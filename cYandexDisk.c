@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 11.08.2023
+ * Last Modified Date: 23.08.2024
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -20,7 +20,6 @@
 #include <pthread.h>
 #include <time.h>
 #include <unistd.h>
-#include "strfind.h"
 
 //add strptime for winapi
 #ifdef _WIN32
@@ -74,22 +73,25 @@ c_yandex_disk_verification_code_from_html(
 		int len = strlen(s);
 
 		//find start of verification code class structure in html
-		long start = strfnd(html, s); 
-		if (start < 0)
+		char *start = strstr(html, s); 
+		if (!start)
 			ERRORSTR(error, "HTML has no verification code class");
 		else {
 			//find end of code
-			long end = strfnd(&html[start], pattern_ends[i]);
+			char *end = strstr(start, pattern_ends[i]);
+			if (!end)
+				ERRORSTR(error, "no pattern ends: %s", pattern_ends[i]);
+			else {
+				//find length of verification code
+				long clen = end - start;
 
-			//find length of verification code
-			long clen = end - len;
+				//allocate code and copy
+				char * code = MALLOC(clen + 1);
+				strncpy(code, start, clen);
+				code[clen] = 0;
 
-			//allocate code and copy
-			char * code = MALLOC(clen + 1);
-			strncpy(code, &html[start + len], clen);
-			code[clen] = 0;
-
-			return code;
+				return code;
+			}
 		}
 	}
 	return NULL;
@@ -1372,5 +1374,3 @@ int c_yandex_disk_trash_empty(const char * token, char **error)
 	cJSON *json = c_yandex_disk_api("DELETE", "v1/disk/trash/resources", NULL, token, error, NULL);
 	return _c_yandex_disk_standart_parser(json, error);
 }
-
-
