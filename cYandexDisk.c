@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 23.08.2024
+ * Last Modified Date: 10.09.2024
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -20,6 +20,12 @@
 #include <pthread.h>
 #include <time.h>
 #include <unistd.h>
+#include "alloc.h"
+#include "log.h"
+#include "str.h"
+
+#define STRCOPY(dst, src)\
+	({strncpy(dst, src, sizeof(dst)-1); dst[sizeof(dst)-1]=0;})
 
 //add strptime for winapi
 #ifdef _WIN32
@@ -31,23 +37,19 @@ char * strptime(const char* s, const char* f, struct tm* tm);
 
 #define YD_ANSWER_LIMIT 20
 
-//memory allocation helpers
-#define MALLOC(size) ({void* const ___p = malloc(size); if(!___p) {perror("Malloc"); exit(EXIT_FAILURE);} ___p;})
-#define REALLOC(ptr, size)	({ void* const ___s = ptr; void* const ___p = realloc(___s, size);	if(!___p) { perror("Realloc"); exit(EXIT_FAILURE); } ___p; })
-#define NEW(T) ((T*)MALLOC(sizeof(T)))
-
-//error and string helpers
-#define ERRORSTR(ptr, ...) ({if(ptr) {*ptr = MALLOC(BUFSIZ); sprintf(*ptr, __VA_ARGS__);};})
-#define STR(...) ({char ___str[BUFSIZ]; sprintf(___str, __VA_ARGS__); ___str;})
-#define STRCOPY(str0, str1) ({size_t ___size = sizeof(str0); strncpy(str0, str1, ___size - 1); str0[___size - 1] = '\0';})
-
-char *
-c_yandex_disk_url_to_ask_for_verification_code(const char *client_id,  char **error) {
+char * 
+c_yandex_disk_url_to_ask_for_verification_code(
+		const char *client_id,  char **err)
+{
+	char *requestString = MALLOC(BUFSIZ, 
+		 if (err)
+			*err = strdup("malloc");
+			return NULL);
 	
-	char *requestString = MALLOC(BUFSIZ);
-	
-	sprintf(requestString, "https://oauth.yandex.ru/authorize?response_type=code");	
-	sprintf(requestString, "%s&client_id=%s", requestString, client_id);
+	sprintf(requestString, 
+			"https://oauth.yandex.ru/authorize?response_type=code");	
+	sprintf(requestString, 
+			"%s&client_id=%s", requestString, client_id);
 	
 	return requestString;
 }
@@ -55,7 +57,7 @@ c_yandex_disk_url_to_ask_for_verification_code(const char *client_id,  char **er
 char *
 c_yandex_disk_verification_code_from_html(
 		const char *html,         //html to search verification code
-		char **error		      //error
+		char **err		            //error
 		)
 {
 	const char * patterns[] = {
@@ -74,19 +76,24 @@ c_yandex_disk_verification_code_from_html(
 
 		//find start of verification code class structure in html
 		char *start = strstr(html, s); 
-		if (!start)
-			ERRORSTR(error, "HTML has no verification code class");
-		else {
+		if (!start){
+			if (err)
+				*err = strdup("HTML has no verification code class");
+		} else {
 			//find end of code
-			char *end = strstr(start, pattern_ends[i]);
+			char *end = 
+				strstr(start, pattern_ends[i]);
 			if (!end)
-				ERRORSTR(error, "no pattern ends: %s", pattern_ends[i]);
+				*err = strdup(STR("no pattern ends: %s", pattern_ends[i]));
 			else {
 				//find length of verification code
 				long clen = end - start;
 
 				//allocate code and copy
-				char * code = MALLOC(clen + 1);
+				char * code = MALLOC(clen + 1, 
+						if(err)
+							*err = strdup("malloc");
+						return NULL);
 				strncpy(code, start, clen);
 				code[clen] = 0;
 
@@ -97,26 +104,10 @@ c_yandex_disk_verification_code_from_html(
 	return NULL;
 }
 
-
-struct string {
-	char *ptr;
-	size_t len;
-};
-
-void init_string(struct string *s) {
-	s->len = 0;
-	s->ptr = MALLOC(s->len+1);
-	s->ptr[0] = '\0';
-}
-
-size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s)
+size_t writefunc(
+		void *ptr, size_t size, size_t nmemb, struct str *s)
 {
-	size_t new_len = s->len + size*nmemb;
-	s->ptr = REALLOC(s->ptr, new_len+1);
-	memcpy(s->ptr+s->len, ptr, size*nmemb);
-	s->ptr[new_len] = '\0';
-	s->len = new_len;
-
+	str_append(s, ptr, size*nmemb);
 	return size*nmemb;
 }
 
@@ -156,8 +147,8 @@ void c_yandex_disk_url_to_ask_for_verification_code_for_user(
 	
 	CURL *curl = curl_easy_init();
 		
-	struct string s;
-	init_string(&s);
+	struct str s;
+	str_init(&s);
 
 	if(curl) {
 		char requestString[] = "https://oauth.yandex.ru/device/code";	
@@ -189,12 +180,13 @@ void c_yandex_disk_url_to_ask_for_verification_code_for_user(
 		curl_slist_free_all(header);
 		if (res) { //handle erros
 			callback(user_data, NULL, NULL, NULL, 0, 0, STR("cYandexDisk: curl returned error: %d", res));
-			free(s.ptr);
+			free(s.str);
             return;			
 		}		
 		//parse JSON answer
-		cJSON *json = cJSON_ParseWithLength(s.ptr, s.len);
-		free(s.ptr);
+		cJSON *json = 
+			cJSON_ParseWithLength(s.str, s.len);
+		free(s.str);
 		if (cJSON_IsObject(json)) {
 			cJSON *device_code = cJSON_GetObjectItem(json, "device_code");			
 			if (!device_code) { //handle errors
@@ -263,8 +255,8 @@ void c_yandex_disk_get_token_from_user(
 	
 	CURL *curl = curl_easy_init();
 		
-	struct string s;
-	init_string(&s);
+	struct str s;
+	str_init(&s);
 
 	if(curl) {
 		char requestString[] = "https://oauth.yandex.ru/token";	
@@ -300,12 +292,13 @@ void c_yandex_disk_get_token_from_user(
 			curl_slist_free_all(header);
 			if (res) { //handle erros
 				callback(user_data, NULL, 0, NULL, STR("cYandexDisk: curl returned error: %d", res));
-				free(s.ptr);
+				free(s.str);
 							continue;			
 			}		
 			//parse JSON answer
-			cJSON *json = cJSON_ParseWithLength(s.ptr, s.len);
-			free(s.ptr);
+			cJSON *json = 
+				cJSON_ParseWithLength(s.str, s.len);
+			free(s.str);
 			if (cJSON_IsObject(json)) {
 				cJSON *access_token = cJSON_GetObjectItem(json, "access_token");			
 				if (!access_token) { //handle errors
@@ -360,8 +353,8 @@ c_yandex_disk_get_token(
 	
 	CURL *curl = curl_easy_init();
 		
-	struct string s;
-	init_string(&s);
+	struct str s;
+	str_init(&s);
 
 	if(curl) {
 		char requestString[] = "https://oauth.yandex.ru/token";	
@@ -396,12 +389,13 @@ c_yandex_disk_get_token(
 		curl_slist_free_all(header);
 		if (res) { //handle erros
 			callback(user_data, NULL, 0, NULL, STR("cYandexDisk: curl returned error: %d", res));
-			free(s.ptr);
+			free(s.str);
             return;			
 		}		
 		//parse JSON answer
-		cJSON *json = cJSON_ParseWithLength(s.ptr, s.len);
-		free(s.ptr);
+		cJSON *json = 
+			cJSON_ParseWithLength(s.str, s.len);
+		free(s.str);
 		if (cJSON_IsObject(json)) {
 			cJSON *access_token = cJSON_GetObjectItem(json, "access_token");			
 			if (!access_token) { //handle errors
@@ -465,23 +459,10 @@ int curl_download_file(FILE *fp, const char * url, void * user_data, void (*call
     return 0;
 }
 
-struct memory {
-	void * data;
-	size_t size;
-};
-
-size_t curl_download_data_writefunc(void *data, size_t size, size_t nmemb, struct memory *t)
+size_t curl_download_data_writefunc(
+		void *data, size_t size, size_t nmemb, struct str *s)
 {
-	size_t realsize = size * nmemb;
-	size_t new_len = t->size + realsize;
-	void *p = realloc(t->data, new_len);
-	if (!p)
-		return 0;
-	t->data = p;
-	memcpy(&(t->data[t->size]), data, realsize);
-	
-	t->size = new_len;
-
+	str_append(s, data, size * nmemb);
 	return size*nmemb;
 }
 
@@ -490,16 +471,15 @@ size_t curl_download_data(const char * url, void * user_data, void (*callback)(v
 	CURL *curl;
     CURLcode res;
 
-	struct memory t;
-	t.data = MALLOC(8);
-	t.size = 0;
+	struct str s;
+	str_init(&s);
 
     curl = curl_easy_init();
     if (curl) {
 		
         curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_download_data_writefunc);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &t);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
 		/* enable verbose for easier tracing */
 		//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 		/* example.com is redirected, so we tell libcurl to follow redirection */
@@ -523,13 +503,13 @@ size_t curl_download_data(const char * url, void * user_data, void (*callback)(v
 			curl_off_t size;
 			curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &size);
 			if (callback)
-				callback(t.data, size, user_data, NULL);
+				callback(s.str, size, user_data, NULL);
 		}	
         /* always cleanup */
 		curl_easy_cleanup(curl);
     }
-	free(t.data);
-    return t.size;
+	free(s.str);
+    return s.len;
 }
 
 size_t curl_upload_file_readfunc(char *ptr, size_t size, size_t nmemb, void *userdata)
@@ -607,7 +587,13 @@ int curl_upload_file(FILE *fp, const char * url, void *user_data, void (*callbac
 	return 0;
 }
 
-size_t curl_upload_data_readfunc(char *ptr, size_t size, size_t nmemb, struct memory *t)
+struct memory {
+	void *data;
+	int size;
+};
+
+size_t curl_upload_data_readfunc(
+		char *ptr, size_t size, size_t nmemb, struct memory *t)
 {
 	size_t s = size * nmemb;
 	
@@ -685,8 +671,8 @@ cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const
 
 	CURL *curl = curl_easy_init();
 		
-	struct string s;
-	init_string(&s);
+	struct str s;
+	str_init(&s);
 	
 	if(curl) {
 		char requestString[BUFSIZ];	
@@ -734,18 +720,19 @@ cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const
 		curl_easy_cleanup(curl);
 		curl_slist_free_all(header);
 		if (res) { //handle erros
-			ERRORSTR(error, "cYandexDisk: curl returned error: %d", res);
-			free(s.ptr);
-            return NULL;			
+			if (error)
+				*error = strdup(STR("cYandexDisk: curl returned error: %d", res));
+			free(s.str);
+        return NULL;			
 		}		
 		//parse JSON answer
-		cJSON *json = cJSON_ParseWithLength(s.ptr, s.len);
-		free(s.ptr);		
+		cJSON *json = cJSON_ParseWithLength(s.str, s.len);
+		free(s.str);		
 
 		return json;
 	}
 
-	free(s.ptr);
+	free(s.str);
 	return NULL;
 }
 
@@ -822,7 +809,8 @@ int  _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfe
 	}	
 
 	//set params
-	struct curl_transfer_file_in_thread_params *params = NEW(struct curl_transfer_file_in_thread_params);
+	struct curl_transfer_file_in_thread_params *params = 
+		NEW(struct curl_transfer_file_in_thread_params, return -1);
 	params->fp = fp;
 	strcpy(params->url, url->valuestring);
 	params->user_data = user_data;
@@ -867,12 +855,13 @@ c_yandex_disk_file_url(const char * token, const char * path, char **error)
 	cJSON *href = cJSON_GetObjectItem(json, "href");
 	if (!href){ //error to get info
 		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		ERRORSTR(error, "cYandexDisk: %s", message->valuestring);
+		if (error)
+			*error = strdup(STR("cYandexDisk: %s", message->valuestring));
 		cJSON_free(json);
 		return  NULL;		
 	}	
 	size_t size = strlen(href->valuestring);
-	char *url = MALLOC(BUFSIZ);
+	char *url = MALLOC(BUFSIZ, return NULL);
 	strncpy(url, href->valuestring, size);
 	url[size] = '\0';
 	cJSON_free(json);
@@ -1063,9 +1052,10 @@ c_yandex_disk_file_info(
 	sprintf(path_arg, "path=%s", path);	
 
 	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources", NULL, token, &error, path_arg, NULL);
-	if (error) {
-		ERRORSTR(_error, "%s", error);
+	cJSON *json = 
+		c_yandex_disk_api("GET", "v1/disk/resources", NULL, token, &error, path_arg, NULL);
+	if (error && _error) {
+		*_error = error;
 	}
 
 	if (!json) { //no json returned
@@ -1073,7 +1063,8 @@ c_yandex_disk_file_info(
 	}
 	if (!cJSON_GetObjectItem(json, "path")){ //error to get info of file/directory
 		cJSON *message = cJSON_GetObjectItem(json, "error");
-		ERRORSTR(_error, "%s", message->valuestring);
+		if (_error)
+			*_error = strdup(message->valuestring);
 		cJSON_free(json);
 		return -1;
 	}	
@@ -1125,7 +1116,8 @@ int _c_yandex_disk_standart_parser(cJSON *json, char **error){
 
 	if (!cJSON_GetObjectItem(json, "href") && !cJSON_GetObjectItem(json, "path")){ //error to get info
 		cJSON *message = cJSON_GetObjectItem(json, "message");			
-		ERRORSTR(error, "cYandexDisk: %s", message->valuestring);
+		if (error)
+			*error = strdup(STR("cYandexDisk: %s", message->valuestring));
 		cJSON_free(json);
 		return  -1;		
 	}	
@@ -1198,7 +1190,8 @@ int _c_yandex_disk_async_parser(cJSON *json, const char * token, void *user_data
 	}	
 
 	//set params
-	struct _c_yandex_disk_async_parser_params *params = NEW(struct _c_yandex_disk_async_parser_params);
+	struct _c_yandex_disk_async_parser_params *params = 
+		NEW(struct _c_yandex_disk_async_parser_params, return -1);
 	strcpy(params->operation_id, operation_id->valuestring);
 	params->user_data = user_data;
 	params->callback = callback;

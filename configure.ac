@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT([libcYandexDisk], [1.0])
+AC_INIT([libcYandexDisk], [1.1])
 AM_INIT_AUTOMAKE
 
 LT_INIT
@@ -17,6 +17,8 @@ case "${host_os}" in
     darwin*)
         build_mac=yes;;
     *)
+#check curl headers
+		AC_CHECK_HEADER([curl/curl.h],[],[AC_MSG_ERROR([Please install libcurl])],[])
 		build_linux=yes;;
 esac
 
