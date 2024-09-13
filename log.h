@@ -2,7 +2,7 @@
  * File              : log.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 19.03.2023
- * Last Modified Date: 22.05.2024
+ * Last Modified Date: 13.09.2024
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -38,29 +38,32 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 
-#define STR(...) ({char s[BUFSIZ]; snprintf(s, BUFSIZ-1, __VA_ARGS__); s[BUFSIZ-1]=0; s;})
+#define STR(...) \
+	({char _s[BUFSIZ]; snprintf(_s, BUFSIZ-1, __VA_ARGS__); _s[BUFSIZ-1]=0; _s;})
+#define STR_ERR(...) STR("E/_%s: %s: %s", __FILE__, __func__, STR(__VA_ARGS__))
+#define STR_LOG(...) STR("I/_%s: %s: %s", __FILE__, __func__, STR(__VA_ARGS__))
 
 #ifdef __ANDROID__
 	#include <android/log.h>
-	#define LOG(...) __android_log_print(ANDROID_LOG_INFO,  STR("%s: _%s: ", __FILE__, __func__), __VA_ARGS__)
-	#define ERR(...) __android_log_print(ANDROID_LOG_ERROR, STR("%s: _%s: %d: ", __FILE__, __func__, __LINE__), __VA_ARGS__) 	
+	#define LOG(fmt, ...) __android_log_print(ANDROID_LOG_INFO,  STR("%s: _%s: " fmt, __FILE__, __func__), __VA_ARGS__)
+	#define ERR(fmt, ...) __android_log_print(ANDROID_LOG_ERROR, STR("%s: _%s: %d: " fmt, __FILE__, __func__, __LINE__), __VA_ARGS__) 	
 #elif defined __APPLE__
 	#include <CoreFoundation/CoreFoundation.h>
 	void NSLog(CFStringRef format, ...);
 	#define LOG(fmt, ...) NSLog(CFSTR(fmt), ##__VA_ARGS__)
 	#define ERR(fmt, ...) LOG("E/_%s: %d: %s", __func__, __LINE__, STR(fmt, __VA_ARGS__)) 
 #else
-	#define LOG(...) \
+	#define LOG(fmt, ...) \
 	({ \
-		char s[BUFSIZ]; snprintf(s, BUFSIZ-1, __VA_ARGS__); s[BUFSIZ-1]=0; \
+		char _s[BUFSIZ]; snprintf(_s, BUFSIZ-1, fmt __VA_ARGS__); _s[BUFSIZ-1]=0; \
 		fprintf(stderr, "%s: _%s: %s\n",   __FILE__, __func__, s); \
 	 })
 
-	#define ERR(...) \
+	#define ERR(fmt, ...) \
 	({\
-		char s[BUFSIZ]; snprintf(s, BUFSIZ-1, __VA_ARGS__); s[BUFSIZ-1]=0; \
-		char e[BUFSIZ]; snprintf(e, BUFSIZ-1, "E/%s: _%s: %d: %s", __FILE__, __func__, __LINE__, s); e[BUFSIZ-1]=0; \
-	  perror(e); \
+		char _s[BUFSIZ]; snprintf(_s, BUFSIZ-1, fmt __VA_ARGS__); _s[BUFSIZ-1]=0; \
+		char _e[BUFSIZ]; snprintf(_e, BUFSIZ-1, "E/%s: _%s: %d: %s", __FILE__, __func__, __LINE__, _s); _e[BUFSIZ-1]=0; \
+	  perror(_e); \
 	})
 	
 #endif
