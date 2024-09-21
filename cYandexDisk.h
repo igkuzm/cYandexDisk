@@ -2,7 +2,7 @@
  * File              : cYandexDisk.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 11.08.2023
+ * Last Modified Date: 21.09.2024
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 /*
@@ -352,6 +352,15 @@ int c_yandex_disk_trash_restore(const char * access_token, const char * path, ch
 
 //clear trash - remove all files
 int c_yandex_disk_trash_empty(const char * access_token, char **error);
+
+// curl functions
+int curl_download_file(FILE *fp, const char * url, void * user_data, void (*callback)(FILE *fp, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow)); 
+
+size_t curl_download_data(const char * url, void * user_data, void (*callback)(void *data, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow)); 
+
+int curl_upload_file(FILE *fp, const char * url, void *user_data, void (*callback)(FILE *fp, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow));
+
+int curl_upload_data(void * data, size_t size, const char * url, void *user_data, void (*callback)(void *data, size_t size,void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow));
 
 #ifdef __cplusplus
 }  /* end of the 'extern "C"' block */
