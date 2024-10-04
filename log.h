@@ -2,7 +2,7 @@
  * File              : log.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 19.03.2023
- * Last Modified Date: 13.09.2024
+ * Last Modified Date: 04.10.2024
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -55,13 +55,13 @@ extern "C" {
 #else
 	#define LOG(fmt, ...) \
 	({ \
-		char _s[BUFSIZ]; snprintf(_s, BUFSIZ-1, fmt __VA_ARGS__); _s[BUFSIZ-1]=0; \
-		fprintf(stderr, "%s: _%s: %s\n",   __FILE__, __func__, s); \
+		char _s[BUFSIZ]; snprintf(_s, BUFSIZ-1, fmt, __VA_ARGS__); _s[BUFSIZ-1]=0; \
+		fprintf(stderr, "%s: _%s: %s\n",   __FILE__, __func__, _s); \
 	 })
 
 	#define ERR(fmt, ...) \
 	({\
-		char _s[BUFSIZ]; snprintf(_s, BUFSIZ-1, fmt __VA_ARGS__); _s[BUFSIZ-1]=0; \
+		char _s[BUFSIZ]; snprintf(_s, BUFSIZ-1, fmt, __VA_ARGS__); _s[BUFSIZ-1]=0; \
 		char _e[BUFSIZ]; snprintf(_e, BUFSIZ-1, "E/%s: _%s: %d: %s", __FILE__, __func__, __LINE__, _s); _e[BUFSIZ-1]=0; \
 	  perror(_e); \
 	})
