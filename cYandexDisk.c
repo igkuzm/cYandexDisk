@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 10.09.2024
+ * Last Modified Date: 07.10.2024
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -27,10 +27,8 @@
 #define STRCOPY(dst, src)\
 	({strncpy(dst, src, sizeof(dst)-1); dst[sizeof(dst)-1]=0;})
 
-//add strptime for winapi
-#ifdef _WIN32
+//add strptime
 char * strptime(const char* s, const char* f, struct tm* tm);
-#endif
 
 #define API_URL "https://cloud-api.yandex.net"
 #define VERIFY_SSL 0
