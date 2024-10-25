@@ -45,8 +45,8 @@ extern "C" {
 
 #ifdef __ANDROID__
 	#include <android/log.h>
-	#define LOG(fmt, ...) __android_log_print(ANDROID_LOG_INFO,  __FILE__, STR(": _%s: " fmt, __func__), __VA_ARGS__)
-	#define ERR(fmt, ...) __android_log_print(ANDROID_LOG_ERROR, __FILE__, STR(": _%s: %d: " fmt, __func__, __LINE__), __VA_ARGS__) 	
+	#define LOG(fmt, ...) __android_log_print(ANDROID_LOG_INFO,  __FILE__, "_%s: " fmt, __func__, __VA_ARGS__)
+	#define ERR(fmt, ...) __android_log_print(ANDROID_LOG_ERROR, __FILE__, "_%s: %d: " fmt, __func__, __LINE__, __VA_ARGS__) 	
 #elif defined __APPLE__
 	#include <CoreFoundation/CoreFoundation.h>
 	void NSLog(CFStringRef format, ...);
