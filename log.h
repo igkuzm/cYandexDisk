@@ -2,7 +2,7 @@
  * File              : log.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 19.03.2023
- * Last Modified Date: 04.10.2024
+ * Last Modified Date: 25.10.2024
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -45,8 +45,8 @@ extern "C" {
 
 #ifdef __ANDROID__
 	#include <android/log.h>
-	#define LOG(fmt, ...) __android_log_print(ANDROID_LOG_INFO,  STR("%s: _%s: " fmt, __FILE__, __func__), __VA_ARGS__)
-	#define ERR(fmt, ...) __android_log_print(ANDROID_LOG_ERROR, STR("%s: _%s: %d: " fmt, __FILE__, __func__, __LINE__), __VA_ARGS__) 	
+	#define LOG(fmt, ...) __android_log_print(ANDROID_LOG_INFO,  __progname, STR("%s: _%s: " fmt, __FILE__, __func__), __VA_ARGS__)
+	#define ERR(fmt, ...) __android_log_print(ANDROID_LOG_ERROR, __progname, STR("%s: _%s: %d: " fmt, __FILE__, __func__, __LINE__), __VA_ARGS__) 	
 #elif defined __APPLE__
 	#include <CoreFoundation/CoreFoundation.h>
 	void NSLog(CFStringRef format, ...);
