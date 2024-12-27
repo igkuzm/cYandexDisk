@@ -3,6 +3,7 @@
 lib_LTLIBRARIES  = libcYandexDisk.la
 libcYandexDisk_la_SOURCES = \
 		cYandexDisk.c\
+		cYandexOAuth.c \
 	  	cJSON.c\
 	  	uuid4.c
 
