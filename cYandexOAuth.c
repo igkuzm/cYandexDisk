@@ -184,7 +184,7 @@ void c_yandex_oauth_code_from_user(
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
 
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
 
 		CURLcode res = curl_easy_perform(curl);
 
@@ -275,7 +275,6 @@ void c_yandex_oauth_get_token_from_user(
 	CURL *curl = curl_easy_init();
 
 	struct string s;
-	init_string(&s);
 
 	if(curl) {
 		char requestString[] = "https://oauth.yandex.ru/token";	
@@ -304,13 +303,15 @@ void c_yandex_oauth_get_token_from_user(
 
 		int i;
 		for (i=0; i < expires_in; i += interval){
+			sleep(interval);
+			printf("ask for token...\n");
 			
+			init_string(&s);
 			CURLcode res = curl_easy_perform(curl);
 
 			if (res) { //handle erros
 				//callback(user_data, NULL, 0, NULL, curl_easy_strerror(res));
 				// try again
-				sleep(interval);
 				continue;			
 			}		
 			
@@ -334,7 +335,6 @@ void c_yandex_oauth_get_token_from_user(
 					if (strcmp(error_description->valuestring, 
 								"User has not yet authorized your application")== 0)
 					{
-						sleep(interval);
 						continue;
 					}
 
@@ -361,7 +361,6 @@ void c_yandex_oauth_get_token_from_user(
 				cJSON_free(json);
 				return;;
 			}	
-			sleep(interval);
 		}
 	}
 }
