@@ -2,7 +2,7 @@
  * File              : cYandexOAuth.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 12.08.2023
- * Last Modified Date: 22.08.2023
+ * Last Modified Date: 28.12.2024
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -40,7 +40,8 @@ extern "C" {
  *				для получения кода подтверждения от
  *				c_yandex_oauth_code_from_user
  *				2.3.2 Попросить пользователя перейти на страницу
- *				url и ввести user_code. Одновременно запусить
+ *				url (https://oauth.yandex.ru/device) и ввести 
+ *				user_code. Одновременно запусить
  *				c_yandex_oauth_get_token_from_user. Пункт 3 не нужен.
  *
  * 3. Получить токен:
