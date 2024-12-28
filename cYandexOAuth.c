@@ -346,9 +346,20 @@ void c_yandex_oauth_get_token_from_user(
 					return;;
 				}
 				//OK - we have a token
-				callback(user_data, access_token->valuestring, cJSON_GetObjectItem(json, "expires_in")->valueint, cJSON_GetObjectItem(json, "refresh_token")->valuestring, NULL);
+				cJSON *expires_in = 
+					cJSON_GetObjectItem(json, "expires_in");
+			 cJSON *refresh_token =	
+				 cJSON_GetObjectItem(json, "refresh_token");
+				
+				if (callback)
+					callback(
+							user_data, 
+							access_token->valuestring,
+							expires_in->valueint, 
+							refresh_token->valuestring, 
+							NULL);
 				cJSON_free(json);
-				break;
+				return;;
 			}	
 			sleep(interval);
 		}
