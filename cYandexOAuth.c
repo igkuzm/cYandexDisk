@@ -334,6 +334,14 @@ void c_yandex_oauth_get_token_from_user(
 						cJSON_free(json);
 						return;
 					}
+					if (strcmp(error_description->valuestring, 
+								"User has not yet authorized your application")== 0)
+					{
+						sleep(interval);
+						continue;
+					}
+
+					// callback error
 					if (callback)
 						callback(user_data, NULL, 0, NULL, 
 								error_description->valuestring);
