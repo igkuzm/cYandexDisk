@@ -2,7 +2,7 @@
  * File              : cYandexOAuth.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 12.08.2023
- * Last Modified Date: 22.08.2023
+ * Last Modified Date: 28.12.2024
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -246,15 +246,18 @@ void c_yandex_oauth_get_token_from_user(
 	)
 {	
 	if (device_code == NULL) {
-		callback(user_data, NULL, 0, NULL, "cYandexDisk: No device_code");
+		if(callback)
+			callback(user_data, NULL, 0, NULL, "cYandexDisk: No device_code");
 		return;
 	}
 	if (client_id == NULL) {
-		callback(user_data, NULL, 0, NULL, "cYandexDisk: No client_id");
+		if (callback)
+			callback(user_data, NULL, 0, NULL, "cYandexDisk: No client_id");
 		return;
 	}
 	if (client_secret == NULL) {
-		callback(user_data, NULL, 0, NULL, "cYandexDisk: No client_secret");
+		if (callback)
+			callback(user_data, NULL, 0, NULL, "cYandexDisk: No client_secret");
 		return;
 	}
 
@@ -263,12 +266,14 @@ void c_yandex_oauth_get_token_from_user(
 	uuid4_seed(&state);
 	uuid4_gen(&state, &uuid);
 	if (!uuid4_to_s(uuid, device_id, 37)){
-		callback(user_data, NULL, 0, NULL, "cYandexDisk: Can't genarate UUID");
+		if (callback)
+			callback(user_data, NULL, 0, NULL, 
+					"cYandexDisk: Can't genarate UUID");
 		return;
 	}
 	
 	CURL *curl = curl_easy_init();
-		
+
 	struct string s;
 	init_string(&s);
 
@@ -313,20 +318,27 @@ void c_yandex_oauth_get_token_from_user(
 			curl_slist_free_all(header);
 			
 			//parse JSON answer
-			cJSON *json = cJSON_ParseWithLength(s.ptr, s.len);
+			cJSON *json = 
+				cJSON_ParseWithLength(s.ptr, s.len);
+
 			free(s.ptr);
 			if (cJSON_IsObject(json)) {
-				cJSON *access_token = cJSON_GetObjectItem(json, "access_token");			
+				cJSON *access_token =
+				 	cJSON_GetObjectItem(json, "access_token");			
 				if (!access_token) { //handle errors
-					cJSON *error_description = cJSON_GetObjectItem(json, "error_description");
+					cJSON *error_description = 
+						cJSON_GetObjectItem(json, "error_description");
 					if (!error_description) {
-						callback(user_data, NULL, 0, NULL, "unknown error!"); //no error code in JSON answer
+						if (callback)
+							callback(user_data, NULL, 0, NULL, "unknown error!"); //no error code in JSON answer
 						cJSON_free(json);
-						continue;
+						return;
 					}
-					callback(user_data, NULL, 0, NULL, error_description->valuestring);
+					if (callback)
+						callback(user_data, NULL, 0, NULL, 
+								error_description->valuestring);
 					cJSON_free(json);
-					continue;
+					return;;
 				}
 				//OK - we have a token
 				callback(user_data, access_token->valuestring, cJSON_GetObjectItem(json, "expires_in")->valueint, cJSON_GetObjectItem(json, "refresh_token")->valuestring, NULL);
