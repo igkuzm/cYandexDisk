@@ -312,10 +312,10 @@ void c_yandex_oauth_get_token_from_user(
 				free(s.ptr);
 				curl_easy_cleanup(curl);
 				curl_slist_free_all(header);
-				continue;			
+				if (callback)
+					callback(user_data, NULL, 0, NULL, "curl error!"); //no error code in JSON answer
+				return;;			
 			}		
-			curl_easy_cleanup(curl);
-			curl_slist_free_all(header);
 			
 			//parse JSON answer
 			cJSON *json = 
