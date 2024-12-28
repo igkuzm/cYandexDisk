@@ -308,12 +308,9 @@ void c_yandex_oauth_get_token_from_user(
 			CURLcode res = curl_easy_perform(curl);
 
 			if (res) { //handle erros
-				callback(user_data, NULL, 0, NULL, curl_easy_strerror(res));
-				//free(s.ptr);
-				//curl_easy_cleanup(curl);
-				//curl_slist_free_all(header);
-				//if (callback)
-					//callback(user_data, NULL, 0, NULL, "curl error!"); //no error code in JSON answer
+				//callback(user_data, NULL, 0, NULL, curl_easy_strerror(res));
+				// try again
+				sleep(interval);
 				continue;			
 			}		
 			
