@@ -447,7 +447,12 @@ int curl_download_file(FILE *fp, const char * url, void * user_data, void (*call
 		} else {
 			/* now extract transfer info */
 			curl_off_t size;
+#if LIBCURL_VERSION_NUM >= 0x071904
 			curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &size);
+#else
+			curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &size);
+#endif
+
 			if (callback)
 				callback(fp, size, user_data, NULL);
 		}	
@@ -499,7 +504,11 @@ size_t curl_download_data(const char * url, void * user_data, void (*callback)(v
 		} else {
 			/* now extract transfer info */
 			curl_off_t size;
+#if LIBCURL_VERSION_NUM >= 0x071904
 			curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &size);
+#else
+			curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &size);
+#endif
 			if (callback)
 				callback(s.str, size, user_data, NULL);
 		}	
@@ -575,7 +584,11 @@ int curl_upload_file(FILE *fp, const char * url, void *user_data, void (*callbac
 		else {
 			/* now extract transfer info */
 			curl_off_t size;
+#if LIBCURL_VERSION_NUM >= 0x071904
 			curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_UPLOAD_T, &size);
+#else
+			curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_UPLOAD, &size);
+#endif
 			if (callback)
 				callback(fp, size, user_data, NULL);
 		}
@@ -652,7 +665,11 @@ int curl_upload_data(void * data, size_t size, const char * url, void *user_data
 		else {
 			/* now extract transfer info */
 			curl_off_t size;
+#if LIBCURL_VERSION_NUM >= 0x071904
 			curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_UPLOAD_T, &size);
+#else
+			curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_UPLOAD, &size);
+#endif
 			if (callback)
 				callback(data, size, user_data, NULL);
 		}
