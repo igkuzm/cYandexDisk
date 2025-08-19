@@ -135,13 +135,8 @@ void c_yandex_disk_url_to_ask_for_verification_code_for_user(
 	}
 
 	char device_id[37];
-	UUID4_STATE_T state; UUID4_T uuid;
-	uuid4_seed(&state);
-	uuid4_gen(&state, &uuid);
-	if (!uuid4_to_s(uuid, device_id, 37)){
-		callback(user_data, NULL, NULL, NULL, 0, 0, "cYandexDisk: Can't genarate UUID");
-		return;
-	}
+	uuid4_init();
+	uuid4_generate(device_id);
 	
 	CURL *curl = curl_easy_init();
 		
@@ -243,13 +238,8 @@ void c_yandex_disk_get_token_from_user(
 	}
 
 	char device_id[37];
-	UUID4_STATE_T state; UUID4_T uuid;
-	uuid4_seed(&state);
-	uuid4_gen(&state, &uuid);
-	if (!uuid4_to_s(uuid, device_id, 37)){
-		callback(user_data, NULL, 0, NULL, "cYandexDisk: Can't genarate UUID");
-		return;
-	}
+	uuid4_init();
+	uuid4_generate(device_id);
 	
 	CURL *curl = curl_easy_init();
 		
@@ -341,13 +331,8 @@ c_yandex_disk_get_token(
 	}
 
 	char device_id[37];
-	UUID4_STATE_T state; UUID4_T uuid;
-	uuid4_seed(&state);
-	uuid4_gen(&state, &uuid);
-	if (!uuid4_to_s(uuid, device_id, 37)){
-		callback(user_data, NULL, 0, NULL, "cYandexDisk: Can't genarate UUID");
-		return;
-	}
+	uuid4_init();
+	uuid4_generate(device_id);
 	
 	CURL *curl = curl_easy_init();
 		
