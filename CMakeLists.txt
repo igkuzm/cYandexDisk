@@ -53,7 +53,7 @@ if(APPLE)
 	SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -framework Foundation")
 endif()
 
-add_library(${TARGET} PRIVATE 
+add_library(${TARGET} STATIC 
 	cYandexDisk.c 
 	cYandexOAuth.c 
 	cJSON.c 
