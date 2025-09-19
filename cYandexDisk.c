@@ -416,9 +416,15 @@ int curl_download_file(FILE *fp, const char * url, void * user_data, void (*call
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);		
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
 		if (progress_callback) {
+#if LIBCURL_VERSION_NUM < 0x073200
 			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, clientp);
 			curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
 			curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
+#else
+			curl_easy_setopt(curl, CURLOPT_XFERINFODATA, clientp);
+			curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
+			curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
+#endif			
 		}
 			
         res = curl_easy_perform(curl);
@@ -474,9 +480,15 @@ size_t curl_download_data(const char * url, void * user_data, void (*callback)(v
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);		
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
 		if (progress_callback) {
+#if LIBCURL_VERSION_NUM < 0x073200
 			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, clientp);
 			curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
 			curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
+#else
+			curl_easy_setopt(curl, CURLOPT_XFERINFODATA, clientp);
+			curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
+			curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
+#endif			
 		}
 			
         res = curl_easy_perform(curl);
@@ -553,9 +565,15 @@ int curl_upload_file(FILE *fp, const char * url, void *user_data, void (*callbac
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
 		
 		if (progress_callback) {
+#if LIBCURL_VERSION_NUM < 0x073200
 			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, clientp);
 			curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
 			curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
+#else
+			curl_easy_setopt(curl, CURLOPT_XFERINFODATA, clientp);
+			curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
+			curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
+#endif			
 		}		
 
 		res = curl_easy_perform(curl);
@@ -634,9 +652,15 @@ int curl_upload_data(void * data, size_t size, const char * url, void *user_data
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
 
 		if (progress_callback) {
+#if LIBCURL_VERSION_NUM < 0x073200
 			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, clientp);
 			curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
 			curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
+#else
+			curl_easy_setopt(curl, CURLOPT_XFERINFODATA, clientp);
+			curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
+			curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
+#endif			
 		}		
 
 		res = curl_easy_perform(curl);
