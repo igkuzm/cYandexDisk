@@ -11,21 +11,22 @@ libcYandexDisk_la_CFLAGS = -fPIC
 
 if WIN32
 libcYandexDisk_la_CFLAGS += \
-	-Icurl/windows/win32/include
-CURL_LINK = -lcurl -L`pwd`/curl/windows/win32/bin/libcurl.dll
+	-Icurl/windows/win32/include -Ipthreads-win32/include
+LINKS_WIN32 = -lcurl -L`pwd`/curl/windows/win32/bin/libcurl.dll \
+	      -lpthreadGC1 -Lpthreads-win32/lib
 endif
 
 if WIN64
 libcYandexDisk_la_CFLAGS += \
-	-Icurl/windows/win64/include
-CURL_LINK = -lcurl -L`pwd`/curl/windows/win64/bin/libcurl.dll
+	-Icurl/windows/win64/include -Ipthreads-win32/include
+LINKS_WIN64 = -lcurl -L`pwd`/curl/windows/win64/bin/libcurl.dll \
+              -lpthreadGC1 -Lpthreads-win32/lib
 endif
 
 if WINDOWS
-libcYandexDisk_la_SOURCES += strptime.cc
 libcYandexDisk_la_LDFLAGS = -Wl,-no-undefined
 else
 CURL_LINK = -lcurl
 endif
 
-libcYandexDisk_la_LIBADD = $(CURL_LINK)
+libcYandexDisk_la_LIBADD = $(CURL_LINK) $(LINKS_WIN32) $(LINKS_WIN64)

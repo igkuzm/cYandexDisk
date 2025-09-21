@@ -14,7 +14,8 @@ project(
 	${TARGET} VERSION 1.1 
 	DESCRIPTION "C API for Yandex Disk"
 	HOMEPAGE_URL ""
-	LANGUAGES C CXX 
+	#LANGUAGES C CXX 
+	LANGUAGES C 
 )
 
 
@@ -34,7 +35,7 @@ elseif(APPLE)
   endif()
 elseif(WIN32)
 	#add strptime
-	set(ADDSRC strptime.cc)
+	#set(ADDSRC strptime.cc)
 	ADD_LIBRARY(curl STATIC IMPORTED)
 	if(CMAKE_SIZEOF_VOID_P EQUAL 8) #64 bit	
 		SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION
