@@ -291,7 +291,11 @@ void c_yandex_oauth_get_token_from_user(
 
 		int i;
 		for (i=0; i < expires_in; i += interval){
+#ifdef __WIN32__
+			Sleep(interval*1000);
+#else
 			sleep(interval);
+#endif
 			printf("ask for token...\n");
 			
 			init_string(&s);
