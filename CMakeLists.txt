@@ -49,8 +49,8 @@ elseif(WIN32)
 		INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/include)
 		#SET(ADDDIRS ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib)
 		SET_TARGET_PROPERTIES(pthreads_win32 PROPERTIES IMPORTED_LOCATION
-			${CYANDEXDISK_SOURCE_DIR}/pthreads_win32/lib/libpthreadGC1.a)
-		INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/pthread_win32/include)
+			${CYANDEXDISK_SOURCE_DIR}/pthreads-win32/lib/libpthreadGC1.a)
+		INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/pthreads-win32/include)
 	endif()
 endif()
 
