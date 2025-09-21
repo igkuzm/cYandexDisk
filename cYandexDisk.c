@@ -24,6 +24,10 @@
 #include "log.h"
 #include "str.h"
 
+##ifdef __WIN32__
+#include <windows.h>
+#endif
+
 #define STRCOPY(dst, src)\
 	({strncpy(dst, src, sizeof(dst)-1); dst[sizeof(dst)-1]=0;})
 
