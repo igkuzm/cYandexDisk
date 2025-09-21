@@ -43,6 +43,9 @@ elseif(WIN32)
 			${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib/libcurl.dll.a)
 		INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/include)
 		#SET(ADDDIRS ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib)
+		SET_TARGET_PROPERTIES(pthreads_win32 PROPERTIES IMPORTED_LOCATION
+			${CYANDEXDISK_SOURCE_DIR}/pthreads-win32/lib/libpthreadGC1.a)
+		INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/pthreads-win32/include)
 	elseif(CMAKE_SIZEOF_VOID_P EQUAL 4) #32 bit
 		SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION
 			${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib/libcurl.dll.a)	
