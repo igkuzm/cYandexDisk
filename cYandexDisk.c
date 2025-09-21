@@ -28,7 +28,7 @@
 	({strncpy(dst, src, sizeof(dst)-1); dst[sizeof(dst)-1]=0;})
 
 //add strptime
-char * strptime(const char* s, const char* f, struct tm* tm);
+/*char * strptime(const char* s, const char* f, struct tm* tm);*/
 
 #define API_URL "https://cloud-api.yandex.net"
 #define VERIFY_SSL 0
