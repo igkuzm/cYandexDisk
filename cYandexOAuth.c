@@ -16,6 +16,10 @@
 
 #include "cYandexOAuth.h"
 
+#ifdef __WIN32__
+#include <windows.h>
+#endif
+
 /* return allocated c null-terminated string
  * with url to get oauth code or NULL on error*/
 char * c_yandex_oauth_code_on_page(const char *client_id) {
