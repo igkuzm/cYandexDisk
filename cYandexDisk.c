@@ -24,7 +24,7 @@
 #include "log.h"
 #include "str.h"
 
-##ifdef __WIN32__
+#ifdef __WIN32__
 #include <windows.h>
 #endif
 
