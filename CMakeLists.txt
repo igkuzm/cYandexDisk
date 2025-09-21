@@ -37,6 +37,7 @@ elseif(WIN32)
 	#add strptime
 	#set(ADDSRC strptime.cc)
 	ADD_LIBRARY(curl STATIC IMPORTED)
+	ADD_LIBRARY(pthreads_win32 STATIC IMPORTED)
 	if(CMAKE_SIZEOF_VOID_P EQUAL 8) #64 bit	
 		SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION
 			${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib/libcurl.dll.a)
@@ -47,6 +48,9 @@ elseif(WIN32)
 			${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib/libcurl.dll.a)	
 		INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/include)
 		#SET(ADDDIRS ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib)
+		SET_TARGET_PROPERTIES(pthreads_win32 PROPERTIES IMPORTED_LOCATION
+			${CYANDEXDISK_SOURCE_DIR}/pthreads_win32/lib/libpthreadGC1.a)
+		INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/pthread_win32/include)
 	endif()
 endif()
 
