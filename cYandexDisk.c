@@ -305,7 +305,11 @@ void c_yandex_disk_get_token_from_user(
 				cJSON_free(json);
 				break;
 			}	
+#ifdef __WIN32__
+			sleep(interval*1000);
+#else
 			sleep(interval);
+#endif
 		}
 	}
 }
