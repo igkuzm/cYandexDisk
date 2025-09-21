@@ -310,7 +310,7 @@ void c_yandex_disk_get_token_from_user(
 				break;
 			}	
 #ifdef __WIN32__
-			sleep(interval*1000);
+			Sleep(interval*1000);
 #else
 			sleep(interval);
 #endif
