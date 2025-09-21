@@ -11,6 +11,8 @@ AC_PROG_CXX
 
 AC_CANONICAL_HOST
 
+AC_CONFIG_SRCDIR
+
 case "${host_os}" in
     cygwin*|mingw*)
         build_windows=yes;;
