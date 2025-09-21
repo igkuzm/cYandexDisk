@@ -10,13 +10,13 @@ libcYandexDisk_la_SOURCES = \
 libcYandexDisk_la_CFLAGS = -fPIC
 
 if WIN32
-AM_CFLAGS = \
+libcYandexDisk_la_CFLAGS += \
 	-Icurl/windows/win32/include
 CURL_LINK = -lcurl -L`pwd`/curl/windows/win32/bin/libcurl.dll
 endif
 
 if WIN64
-AM_CFLAGS = \
+libcYandexDisk_la_CFLAGS += \
 	-Icurl/windows/win64/include
 CURL_LINK = -lcurl -L`pwd`/curl/windows/win64/bin/libcurl.dll
 endif
