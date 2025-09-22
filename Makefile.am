@@ -12,7 +12,7 @@ libcYandexDisk_la_CFLAGS = -fPIC
 if WIN32
 libcYandexDisk_la_CFLAGS += \
 	-Icurl/windows/win32/include -Ipthreads-win32/include
-libcYandexDisk_includedir+= curl/windows/win32/include \
+libcYandexDisk_includedir = curl/windows/win32/include \
 														pthreads-win32/include
 LINKS_WIN32 = -lcurl -Lcurl/windows/win32/bin \
 	      -lpthreadGC1 -Lpthreads-win32/lib
