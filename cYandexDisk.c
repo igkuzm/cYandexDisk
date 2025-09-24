@@ -5,7 +5,6 @@
  * Last Modified Date: 07.10.2024
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
-
 #include "cYandexDisk.h"
 #include <curl/curl.h>
 #include <stdarg.h>
