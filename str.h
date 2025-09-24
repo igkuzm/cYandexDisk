@@ -101,7 +101,7 @@ void str_append(
 		return;
 	}
 	
-	int newsize = s->len + len + 1;
+int newsize = s->len + len + 1;
 	// realloc if not enough size
 	if (_str_realloc(s, newsize)){
 		return;
