@@ -19,13 +19,14 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <time.h>
-#include <unistd.h>
 #include "alloc.h"
 #include "log.h"
 #include "str.h"
 
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <unistd.h>
 #endif
 
 #define STRCOPY(dst, src)\
