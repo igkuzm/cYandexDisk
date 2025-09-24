@@ -100,15 +100,13 @@ void str_append(
 	if (!str || len < 1)
 		return;
 
-	int new_size; 
-	int i;
-	
-	new_size = s->len + len + 1;
+	int newsize = s->len + len + 1;
 	// realloc if not enough size
-	if (_str_realloc(s, new_size))
+	if (_str_realloc(s, newsize))
 		return;
 
 	// append string
+	int i;
 	for (i = 0; i < len; ++i)
 		s->str[s->len++] = str[i];
   
