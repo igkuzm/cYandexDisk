@@ -625,7 +625,7 @@ int curl_upload_file(FILE *fp, const char * url, void *user_data, void (*callbac
 
 struct memory {
 	unsigned char *data;
-	int size;
+	size_t size;
 };
 
 size_t curl_upload_data_readfunc(
@@ -827,6 +827,7 @@ void *curl_transfer_file_in_thread(void *_params)
 
 	free(params);
 	pthread_exit(0);
+	return NULL;
 }
 
 int  _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfer, bool wait_finish, FILE *fp, void * data, size_t size, char *error, void *user_data, void (*callback)(FILE *fp, size_t size, void *user_data, const char *error), void (*callback_data)(void *data, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
@@ -1254,6 +1255,7 @@ void * _c_yandex_disk_async_operation_in_thead(void *_params)
 	_c_yandex_disk_async_operation(params->token, params->operation_id, params->user_data, params->callback);
 	free(params);
 	pthread_exit(0);	
+	return NULL;
 }
 
 int _c_yandex_disk_async_parser(cJSON *json, const char * token, void *user_data, int(*callback)(void *user_data, const char *error)){
