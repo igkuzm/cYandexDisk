@@ -37,7 +37,7 @@ extern "C" {
 
 #include <stdio.h>
 #include <string.h>
-#include <stdargs.h>
+#include <stdarg.h>
 
 static char __buf[BUFSIZ];
 
