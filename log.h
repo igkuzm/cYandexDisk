@@ -50,18 +50,22 @@ static char *STR(const char *fmt, ...) {
 }
 
 static char * STR_ERR(fmt, ...) {
+	char str[BUFSIZ];
 	va_list args;
 	va_start(args, fmt);
-	vsprintf(__buf, "E/_%s: %s: " fmt, __FILE__, __func__, args);
+	vsprintf(str, fmt, args);
 	va_end(args);
+	snprintf(__buf, BUFSIZ-1, "E/%s: _%s: %d: %s", __FILE__, __func__, __LINE__, str);
 	return __buf;
 }
 
 static char * STR_LOG(fmt, ...) {
+	char str[BUFSIZ];
 	va_list args;
 	va_start(args, fmt);
-	vsprintf(__buf, "I/_%s: %s: " fmt, __FILE__, __func__, args);
+	vsprintf(str, fmt, args);
 	va_end(args);
+	snprintf(__buf, BUFSIZ-1, "E/%s: _%s: %s", __FILE__, __func__, str);
 	return __buf;
 }
 
