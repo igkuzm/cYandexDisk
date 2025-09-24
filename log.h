@@ -88,7 +88,7 @@ static void LOG(const char *fmt, ...) {
 	fprintf(stderr, "%s: %d: %s\n",   __FILE__, __LINE__, __buf);
 }
 
-static void LOG(const char *fmt, ...) {
+static void ERR(const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 	vsprintf(__buf, fmt, args);
