@@ -1217,11 +1217,13 @@ int _c_yandex_disk_standart_parser(cJSON *json, char **error){
 
 int _c_yandex_disk_async_operation(const char * token, const char *operation_id, void *user_data, int(*callback)(void *user_data, const char *error))
 {
+	cJSON *json;
 	char url_suffix[BUFSIZ];
+	char *error = NULL;
+	
 	sprintf(url_suffix, "v1/disk/operations/%s", operation_id);
 
-	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", url_suffix, NULL, token, &error, NULL);	
+	json = c_yandex_disk_api("GET", url_suffix, NULL, token, &error, NULL);	
 
 	if (!json) { //no json returned
 		if (callback)
@@ -1256,6 +1258,7 @@ void * _c_yandex_disk_async_operation_in_thead(void *_params)
 
 int _c_yandex_disk_async_parser(cJSON *json, const char * token, void *user_data, int(*callback)(void *user_data, const char *error)){
 	
+	int err;
 	cJSON *operation_id;
 	pthread_t tid; //идентификатор потока
 	pthread_attr_t attr; //атрибуты потока
@@ -1274,7 +1277,7 @@ int _c_yandex_disk_async_parser(cJSON *json, const char * token, void *user_data
 	}	
 
 	//получаем дефолтные значения атрибутов
-	int err = pthread_attr_init(&attr);
+	err = pthread_attr_init(&attr);
 	if (err) {
 		perror("THREAD attributes");
 		cJSON_free(json);
