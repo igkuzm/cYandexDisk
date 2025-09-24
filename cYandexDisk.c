@@ -831,12 +831,17 @@ void *curl_transfer_file_in_thread(void *_params)
 
 int  _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfer, bool wait_finish, FILE *fp, void * data, size_t size, char *error, void *user_data, void (*callback)(FILE *fp, size_t size, void *user_data, const char *error), void (*callback_data)(void *data, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
+
+	int err;
+	cJSON *url;
+	struct curl_transfer_file_in_thread_params *params; 
+
 	if (!json) {
 		if (callback)
 			callback(fp, 0,user_data,STR("cYandexDisk: %s", error));
 		return -1;
 	}
-	cJSON *url = cJSON_GetObjectItem(json, "href");			
+	url = cJSON_GetObjectItem(json, "href");			
 	if (!url) {
 		cJSON *message = cJSON_GetObjectItem(json, "message");			
 		if (callback)
@@ -850,7 +855,7 @@ int  _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfe
 	pthread_attr_t attr; //атрибуты потока
 
 	//получаем дефолтные значения атрибутов
-	int err = pthread_attr_init(&attr);
+	err = pthread_attr_init(&attr);
 	if (err) {
 		perror("THREAD attributes");
 		if (callback)
@@ -859,8 +864,7 @@ int  _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfe
 	}	
 
 	//set params
-	struct curl_transfer_file_in_thread_params *params = 
-		NEW(struct curl_transfer_file_in_thread_params);
+	params = NEW(struct curl_transfer_file_in_thread_params);
 	if (!params)
 		return -1;
 	params->fp = fp;
@@ -898,13 +902,17 @@ char *
 c_yandex_disk_file_url(const char * token, const char * path, char **error)
 {
 	char path_arg[BUFSIZ];
+	cJSON *href;
+	size_t size;
+	char *url;
+
 	sprintf(path_arg, "path=%s", path);
 
 	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/download", NULL, token, error, path_arg, NULL);
 	if (!json) //no json returned
 		return NULL;
 
-	cJSON *href = cJSON_GetObjectItem(json, "href");
+	href = cJSON_GetObjectItem(json, "href");
 	if (!href){ //error to get info
 		cJSON *message = cJSON_GetObjectItem(json, "message");			
 		if (error)
@@ -912,8 +920,8 @@ c_yandex_disk_file_url(const char * token, const char * path, char **error)
 		cJSON_free(json);
 		return  NULL;		
 	}	
-	size_t size = strlen(href->valuestring);
-	char *url = MALLOC(BUFSIZ);
+	size = strlen(href->valuestring);
+	url = MALLOC(BUFSIZ);
 	if (!url)
 		return NULL;
 	strncpy(url, href->valuestring, size);
@@ -925,13 +933,15 @@ c_yandex_disk_file_url(const char * token, const char * path, char **error)
 int c_yandex_disk_upload_file(const char * token, FILE *fp, const char * path, bool overwrite, bool wait_finish, void *user_data, void (*callback)(FILE *fp, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	char path_arg[BUFSIZ];
-	sprintf(path_arg, "path=%s", path);
-
 	char overwrite_arg[32];
+	char *error;
+	cJSON *json;
+
+
+	sprintf(path_arg, "path=%s", path);
 	sprintf(overwrite_arg, "overwrite=%s", overwrite ? "true" : "false");		
 
-	char *error;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/upload", NULL, token, &error, path_arg, overwrite_arg, NULL);
+	json = c_yandex_disk_api("GET", "v1/disk/resources/upload", NULL, token, &error, path_arg, overwrite_arg, NULL);
 
 	return _c_yandex_disk_transfer_file_parser(json, FILE_UPLOAD, wait_finish, fp, NULL, 0, error, user_data, callback, NULL, clientp, progress_callback);
 }
@@ -939,13 +949,14 @@ int c_yandex_disk_upload_file(const char * token, FILE *fp, const char * path, b
 int c_yandex_disk_upload_data(const char * token, void * data, size_t size, const char * path, bool overwrite, bool wait_finish, void *user_data, void (*callback)(void *data, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	char path_arg[BUFSIZ];
-	sprintf(path_arg, "path=%s", path);
-	
 	char overwrite_arg[32];
+	char *error = NULL;
+	cJSON *json;
+	
+	sprintf(path_arg, "path=%s", path);
 	sprintf(overwrite_arg, "overwrite=%s", overwrite ? "true" : "false");		
 
-	char *error;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/upload", NULL, token, &error, path_arg, overwrite_arg, NULL);
+	json = c_yandex_disk_api("GET", "v1/disk/resources/upload", NULL, token, &error, path_arg, overwrite_arg, NULL);
 
 	return _c_yandex_disk_transfer_file_parser(json, DATA_UPLOAD, wait_finish, NULL, data, size, error, user_data, NULL, callback, clientp, progress_callback);
 }
@@ -953,20 +964,24 @@ int c_yandex_disk_upload_data(const char * token, void * data, size_t size, cons
 int c_yandex_disk_download_file(const char * token, FILE *fp, const char * path, bool wait_finish, void *user_data, void (*callback)(FILE *fp, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	char path_arg[BUFSIZ];
+	char *error = NULL;
+	cJSON *json;
+	
 	sprintf(path_arg, "path=%s", path);
 
-	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/download", NULL, token, &error, path_arg, NULL);
+	json = c_yandex_disk_api("GET", "v1/disk/resources/download", NULL, token, &error, path_arg, NULL);
 	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, wait_finish, fp, NULL, 0, error, user_data, callback, NULL, clientp, progress_callback);
 }
 
 int c_yandex_disk_download_data(const char * token, const char * path, bool wait_finish, void *user_data, void (*callback)(void *data, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	char path_arg[BUFSIZ];
+	char *error = NULL;
+	cJSON *json;
+	
 	sprintf(path_arg, "path=%s", path);
 
-	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/download", NULL, token, &error, path_arg, NULL);
+	json = c_yandex_disk_api("GET", "v1/disk/resources/download", NULL, token, &error, path_arg, NULL);
 	return _c_yandex_disk_transfer_file_parser(json, DATA_DOWNLOAD, wait_finish, NULL, NULL, 0, error, user_data, NULL, callback, clientp, progress_callback);
 }
 
@@ -981,58 +996,65 @@ int c_yandex_disk_download_public_resource(
 		int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	char public_key_arg[BUFSIZ];
+	char *error = NULL;
+	cJSON *json;
+	
 	sprintf(public_key_arg, "public_key=%s", public_key);	
 
-	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources/download", NULL, token, &error, public_key_arg, NULL);
+	json = c_yandex_disk_api("GET", "v1/disk/public/resources/download", NULL, token, &error, public_key_arg, NULL);
 	return _c_yandex_disk_transfer_file_parser(json, FILE_DOWNLOAD, wait_finish, fp, NULL, 0, error, user_data, callback, NULL, clientp, progress_callback);
 }
 
 int c_yandex_disk_download_public_resource_data(const char * token, const char * public_key, bool wait_finish, void *user_data, void (*callback)(void *data, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow))
 {
 	char public_key_arg[BUFSIZ];
+	char *error = NULL;
+	cJSON *json;
+	
 	sprintf(public_key_arg, "public_key=%s", public_key);	
 
-	char *error = NULL;
-	cJSON *json = c_yandex_disk_api("GET", "v1/disk/public/resources/download", NULL, token, &error, public_key_arg, NULL);
+	json = c_yandex_disk_api("GET", "v1/disk/public/resources/download", NULL, token, &error, public_key_arg, NULL);
 	return _c_yandex_disk_transfer_file_parser(json, DATA_DOWNLOAD, wait_finish, NULL, NULL, 0, error, user_data, NULL, callback, clientp, progress_callback);
 }
 int c_json_to_c_yd_file_t(cJSON *json, c_yd_file_t *file)
 {
+	cJSON *name, *type, *path, *mime_type, *preview, *public_key,
+				*public_url, *modified, *created;
+
 	file->name[0] = '\0';
-	cJSON *name = cJSON_GetObjectItem(json, "name");	
+	name = cJSON_GetObjectItem(json, "name");	
 	if (name) STRCOPY(file->name, name->valuestring);
 
 	file->type[0] = '\0';
-	cJSON *type = cJSON_GetObjectItem(json, "type");	
+	type = cJSON_GetObjectItem(json, "type");	
 	if (type) STRCOPY(file->type, type->valuestring);	
 
 	file->path[0] = '\0';
-	cJSON *path = cJSON_GetObjectItem(json, "path");	
+	path = cJSON_GetObjectItem(json, "path");	
 	if (path) STRCOPY(file->path, path->valuestring);	
 
 	file->mime_type[0] = '\0';
-	cJSON *mime_type = cJSON_GetObjectItem(json, "mime_type");	
+	mime_type = cJSON_GetObjectItem(json, "mime_type");	
 	if (mime_type) STRCOPY(file->mime_type, mime_type->valuestring);	
 
 	file->size = 0;
-	cJSON *size = cJSON_GetObjectItem(json, "size");	
+	size = cJSON_GetObjectItem(json, "size");	
 	if (size) file->size = size->valueint;	
 
 	file->preview[0] = '\0';
-	cJSON *preview = cJSON_GetObjectItem(json, "preview");	
+	preview = cJSON_GetObjectItem(json, "preview");	
 	if (preview) STRCOPY(file->preview, preview->valuestring);	
 
 	file->public_key[0] = '\0';
-	cJSON *public_key = cJSON_GetObjectItem(json, "public_key");	
+	public_key = cJSON_GetObjectItem(json, "public_key");	
 	if (public_key) STRCOPY(file->public_key, public_key->valuestring);	
 	
 	file->public_url[0] = '\0';
-	cJSON *public_url = cJSON_GetObjectItem(json, "public_url");	
+	public_url = cJSON_GetObjectItem(json, "public_url");	
 	if (public_url) STRCOPY(file->public_url, public_url->valuestring);	
 
 	file->modified = 0;
-	cJSON *modified = cJSON_GetObjectItem(json, "modified");	
+	modified = cJSON_GetObjectItem(json, "modified");	
 	if (modified) {
 		struct tm tm = {0};
 		sscanf(modified->valuestring, "%d-%d-%dT%d:%d:%d+00:00", &tm.tm_year, &tm.tm_mon, &tm.tm_mday, &tm.tm_hour, &tm.tm_min, &tm.tm_sec);
@@ -1044,7 +1066,7 @@ int c_json_to_c_yd_file_t(cJSON *json, c_yd_file_t *file)
 	}	
 
 	file->created = 0;
-	cJSON *created = cJSON_GetObjectItem(json, "created");	
+	created = cJSON_GetObjectItem(json, "created");	
 	if (created) {
 		struct tm tm = {0};
 		sscanf(modified->valuestring, "%d-%d-%dT%d:%d:%d+00:00", &tm.tm_year, &tm.tm_mon, &tm.tm_mday, &tm.tm_hour, &tm.tm_min, &tm.tm_sec);
@@ -1060,6 +1082,9 @@ int c_json_to_c_yd_file_t(cJSON *json, c_yd_file_t *file)
 
 int _c_yandex_disk_ls_parser(cJSON *json, char *error, void * user_data, int(*callback)(const c_yd_file_t *file, void * user_data, const char * error))
 {
+	cJSON *items = NULL,
+				*_embedded;
+
 	if (!json) { //no json returned
 		if (callback)
 			callback(NULL,user_data,STR("cYandexDisk: %s", error));
@@ -1072,17 +1097,18 @@ int _c_yandex_disk_ls_parser(cJSON *json, char *error, void * user_data, int(*ca
 		cJSON_free(json);
 		return  -1;
 	}	
-	cJSON *items = NULL;
-	cJSON *_embedded = cJSON_GetObjectItem(json, "_embedded");
+	items = NULL;
+	_embedded = cJSON_GetObjectItem(json, "_embedded");
 	if (_embedded)
 		items = cJSON_GetObjectItem(_embedded, "items");
 	else 
 		items = cJSON_GetObjectItem(json, "items");
 	if (items) { //we have items in directory
-		int count = cJSON_GetArraySize(items);
+		int i, count = cJSON_GetArraySize(items);
 		if (!count)
 			return 1;
-		for (int i = 0; i < count; ++i) {
+		
+		for (i = 0; i < count; ++i) {
 			cJSON *item = cJSON_GetArrayItem(items, i);
 			c_yd_file_t file;
 			c_json_to_c_yd_file_t(item, &file);
@@ -1107,10 +1133,12 @@ c_yandex_disk_file_info(
 		)
 {
 	char path_arg[BUFSIZ];
+	char *error = NULL;
+	cJSON *json;
+	
 	sprintf(path_arg, "path=%s", path);	
 
-	char *error = NULL;
-	cJSON *json = 
+	json = 
 		c_yandex_disk_api("GET", "v1/disk/resources", NULL, token, &error, path_arg, NULL);
 	if (error && _error) {
 		*_error = error;
@@ -1135,17 +1163,18 @@ c_yandex_disk_file_info(
 int c_yandex_disk_ls(const char * token, const char * path, void * user_data, int(*callback)(const c_yd_file_t *file, void * user_data, const char * error))
 {
 	char path_arg[BUFSIZ];
-	sprintf(path_arg, "path=%s", path);	
-
 	int i = 0, r = 0, l = YD_ANSWER_LIMIT;
 	char limit[BUFSIZ], offset[BUFSIZ];
 	
+	sprintf(path_arg, "path=%s", path);	
 	sprintf(limit, "limit=%d", l);
 	
 	while	(r == 0) {
-		sprintf(offset, "offset=%d", i++ * l);
+		cJSON *json;
 		char *error = NULL;
-		cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources", NULL, token, &error, path_arg, limit, offset, NULL);
+		
+		sprintf(offset, "offset=%d", i++ * l);
+		json = c_yandex_disk_api("GET", "v1/disk/resources", NULL, token, &error, path_arg, limit, offset, NULL);
 		r = _c_yandex_disk_ls_parser(json, error, user_data, callback);
 	}
 	return r;
@@ -1160,9 +1189,11 @@ int c_yandex_disk_ls_public(const char * token, void * user_data, int(*callback)
 	sprintf(limit, "limit=%d", l);
 	
 	while	(r == 0) {
-		sprintf(offset, "offset=%d", i++ * l);
+		cJSON *json;
 		char *error = NULL;
-		cJSON *json = c_yandex_disk_api("GET", "v1/disk/resources/public", NULL, token, &error, limit, offset, NULL);
+		
+		sprintf(offset, "offset=%d", i++ * l);
+		json = c_yandex_disk_api("GET", "v1/disk/resources/public", NULL, token, &error, limit, offset, NULL);
 		r = _c_yandex_disk_ls_parser(json, error, user_data, callback);
 	}
 	return r;
