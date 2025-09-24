@@ -34,7 +34,7 @@
 #include <string.h>
 
 #define MALLOC(size, on_error) \
-({\
+{\
 	void *_p = malloc(size);\
 	if (!_p) {\
 		on_error;\
@@ -42,7 +42,7 @@
 		memset(_p,0,size);\
 	} \
 	_p;\
-})
+}
 
 #define REALLOC(ptr, size, on_error) \
 ({\
