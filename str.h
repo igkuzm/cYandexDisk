@@ -97,13 +97,15 @@ static int _str_realloc(
 void str_append(
 		struct str *s, const char *str, int len)
 {
-	if (!str || len < 1)
+	if (!str || len < 1){
 		return;
+	}
 
 	int newsize = s->len + len + 1;
 	// realloc if not enough size
-	if (_str_realloc(s, newsize))
+	if (_str_realloc(s, newsize)){
 		return;
+	}
 
 	// append string
 	int i;
