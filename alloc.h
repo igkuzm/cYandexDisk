@@ -33,30 +33,24 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MALLOC(size, on_error) \
-{\
-	void *_p = malloc(size);\
-	if (!_p) {\
-		on_error;\
-	} else { \
-		memset(_p,0,size);\
-	} \
-	_p;\
+void *MALLOC(size_t size)
+{
+	void *ptr = malloc(size);
+	if (ptr)
+		memset(ptr, 0, size);
+	return ptr;
 }
 
-#define REALLOC(ptr, size, on_error) \
-({\
-	void *_ret = ptr; \
-	void *_p = realloc(ptr, size);\
-	if (!_p){\
-		on_error;\
-	} else { \
-		_ret = _p; \
-	}\
-	_ret;\
-})
+void *REALLOC(void *p, size_t size)
+{
+	void *ptr = realloc(p, size);
+	if (ptr)
+		return ptr;
+	else
+		return p;
+}
 
-#define NEW(T, on_error)\
-	((T *)MALLOC(sizeof(T), on_error))
+#define NEW(T)\
+	((T *)MALLOC(sizeof(T)))
 
 #endif /* ifndef ALLOC_H */
