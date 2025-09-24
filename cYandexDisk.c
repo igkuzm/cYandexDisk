@@ -624,7 +624,7 @@ int curl_upload_file(FILE *fp, const char * url, void *user_data, void (*callbac
 }
 
 struct memory {
-	void *data;
+	unsigned char *data;
 	int size;
 };
 
@@ -712,20 +712,25 @@ int curl_upload_data(void * data, size_t size, const char * url, void *user_data
 
 cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const char *body, const char * token, char **error, ...)
 {
+	CURL *curl;
+	struct str s;
 	char authorization[BUFSIZ];
 	sprintf(authorization, "Authorization: OAuth %s", token);
 
-	CURL *curl = curl_easy_init();
-		
-	struct str s;
+	curl = curl_easy_init();
 	str_init(&s);
 	
 	if(curl) {
-		char requestString[BUFSIZ];	
-		sprintf(requestString, "%s/%s", API_URL, api_suffix);
+		CURLcode res;
 		va_list argv;
+		char *arg;
+		char requestString[BUFSIZ];	
+		struct curl_slist *header = NULL;
+		cJSON *json;
+		
+		sprintf(requestString, "%s/%s", API_URL, api_suffix);
 		va_start(argv, error);
-		char *arg = va_arg(argv, char*);
+		arg = va_arg(argv, char*);
 		if (arg) {
 			sprintf(requestString, "%s?%s", requestString, arg);
 			arg = va_arg(argv, char*);	
@@ -744,11 +749,10 @@ cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const
 		/* enable verbose for easier tracing */
 		/*curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);		*/
 
-		struct curl_slist *header = NULL;
-	    header = curl_slist_append(header, "Connection: close");		
-	    header = curl_slist_append(header, "Content-Type: application/json");
-	    header = curl_slist_append(header, "Accept: application/json");
-	    header = curl_slist_append(header, authorization);
+	  header = curl_slist_append(header, "Connection: close");		
+	  header = curl_slist_append(header, "Content-Type: application/json");
+	  header = curl_slist_append(header, "Accept: application/json");
+	  header = curl_slist_append(header, authorization);
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
 
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
@@ -759,9 +763,9 @@ cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const
 			curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(body));
 		}
 
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
 
-		CURLcode res = curl_easy_perform(curl);
+		res = curl_easy_perform(curl);
 
 		curl_easy_cleanup(curl);
 		curl_slist_free_all(header);
@@ -772,7 +776,7 @@ cJSON *c_yandex_disk_api(const char * http_method, const char *api_suffix, const
         return NULL;			
 		}		
 		//parse JSON answer
-		cJSON *json = cJSON_ParseWithLength(s.str, s.len);
+		json = cJSON_ParseWithLength(s.str, s.len);
 		free(s.str);		
 
 		return json;
