@@ -15,8 +15,17 @@
 extern "C" {
 #endif
 
-#include <stdio.h>
+#ifdef __WIN32__
+#ifndef bool
+#define bool char
+#define true 1
+#define false 0
+#endif
+#else
 #include <stdbool.h>
+#endif
+
+#include <stdio.h>
 #include <time.h>
 
 // allocate and return URL with verification code request
