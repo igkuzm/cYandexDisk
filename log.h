@@ -49,7 +49,7 @@ static char *STR(const char *fmt, ...) {
 	return __buf;
 }
 
-static char * STR_ERR(fmt, ...) {
+static char * STR_ERR(const char *fmt, ...) {
 	char str[BUFSIZ];
 	va_list args;
 	va_start(args, fmt);
@@ -59,7 +59,7 @@ static char * STR_ERR(fmt, ...) {
 	return __buf;
 }
 
-static char * STR_LOG(fmt, ...) {
+static char * STR_LOG(const char *fmt, ...) {
 	char str[BUFSIZ];
 	va_list args;
 	va_start(args, fmt);
