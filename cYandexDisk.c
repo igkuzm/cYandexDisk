@@ -43,10 +43,12 @@ char *
 c_yandex_disk_url_to_ask_for_verification_code(
 		const char *client_id,  char **err)
 {
-	char *requestString = MALLOC(BUFSIZ, 
+	char *requestString = MALLOC(BUFSIZ);
+	if (!requestString){
 		 if (err)
 			*err = strdup("malloc");
-			return NULL);
+			return NULL;
+	}	
 	
 	sprintf(requestString, 
 			"https://oauth.yandex.ru/authorize?response_type=code");	
@@ -92,10 +94,12 @@ c_yandex_disk_verification_code_from_html(
 				long clen = end - start;
 
 				//allocate code and copy
-				char * code = MALLOC(clen + 1, 
+				char * code = MALLOC(clen + 1);
+				if (!code){
 						if(err)
 							*err = strdup("malloc");
-						return NULL);
+						return NULL;
+				}	
 				strncpy(code, start, clen);
 				code[clen] = 0;
 
@@ -842,7 +846,9 @@ int  _c_yandex_disk_transfer_file_parser(cJSON *json, FILE_TRANSFER file_transfe
 
 	//set params
 	struct curl_transfer_file_in_thread_params *params = 
-		NEW(struct curl_transfer_file_in_thread_params, return -1);
+		NEW(struct curl_transfer_file_in_thread_params);
+	if (!params)
+		return -1;
 	params->fp = fp;
 	strcpy(params->url, url->valuestring);
 	params->user_data = user_data;
@@ -893,7 +899,9 @@ c_yandex_disk_file_url(const char * token, const char * path, char **error)
 		return  NULL;		
 	}	
 	size_t size = strlen(href->valuestring);
-	char *url = MALLOC(BUFSIZ, return NULL);
+	char *url = MALLOC(BUFSIZ);
+	if (!url)
+		return NULL;
 	strncpy(url, href->valuestring, size);
 	url[size] = '\0';
 	cJSON_free(json);
@@ -1227,7 +1235,9 @@ int _c_yandex_disk_async_parser(cJSON *json, const char * token, void *user_data
 
 	//set params
 	struct _c_yandex_disk_async_parser_params *params = 
-		NEW(struct _c_yandex_disk_async_parser_params, return -1);
+		NEW(struct _c_yandex_disk_async_parser_params);
+	if (!params)
+		return -1;
 	strcpy(params->operation_id, operation_id->valuestring);
 	params->user_data = user_data;
 	params->callback = callback;
