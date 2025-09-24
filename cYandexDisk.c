@@ -64,6 +64,7 @@ c_yandex_disk_verification_code_from_html(
 		char **err		            //error
 		)
 {
+	int i;
 	const char * patterns[] = {
 		"verification_code%3Fcode%3D",
 		"class=\"verification-code-code\">"
@@ -73,8 +74,7 @@ c_yandex_disk_verification_code_from_html(
 		"<"
 	};	
 
-	int i;
-	for (int i = 0; i < 2; i++) {
+	for (i = 0; i < 2; i++) {
 		const char * s = patterns[i]; 
 		int len = strlen(s);
 
@@ -132,6 +132,10 @@ void c_yandex_disk_url_to_ask_for_verification_code_for_user(
 			)
 		)
 {
+	char device_id[37];
+	struct str s;
+	CURL *curl = curl_easy_init();
+	
 	if (client_id == NULL) {
 		callback(user_data, NULL, NULL, NULL, 0, 0, "cYandexDisk: No client_id");
 		return;
@@ -142,13 +146,9 @@ void c_yandex_disk_url_to_ask_for_verification_code_for_user(
 		return;
 	}
 
-	char device_id[37];
 	uuid4_init();
 	uuid4_generate(device_id);
 	
-	CURL *curl = curl_easy_init();
-		
-	struct str s;
 	str_init(&s);
 
 	if(curl) {
