@@ -93,9 +93,9 @@ static void ERR(const char *fmt, ...) {
 	va_start(args, fmt);
 	vsprintf(__buf, fmt, args);
 	va_end(args);
-	char _e[BUFSIZ]; 
-	sprintf(_e, "E/%s: %d: %s", __FILE__, __LINE__, __buf);
-	perror(_e);
+	char str[BUFSIZ]; 
+	sprintf(str, "E/%s: %d: %s", __FILE__, __LINE__, __buf);
+	perror(str);
 }
 
 #endif
