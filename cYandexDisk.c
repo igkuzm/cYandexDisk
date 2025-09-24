@@ -152,18 +152,19 @@ void c_yandex_disk_url_to_ask_for_verification_code_for_user(
 	str_init(&s);
 
 	if(curl) {
+		char post[BUFSIZ];
+		struct curl_slist *header = NULL;
+		cJSON *json; 
 		char requestString[] = "https://oauth.yandex.ru/device/code";	
 		
 		curl_easy_setopt(curl, CURLOPT_URL, requestString);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");		
 		curl_easy_setopt(curl, CURLOPT_HEADER, 0);
 
-		struct curl_slist *header = NULL;
 	    header = curl_slist_append(header, "Connection: close");		
 	    header = curl_slist_append(header, "Content-Type: application/x-www-form-urlencoded");		
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
 		
-		char post[BUFSIZ];
 		sprintf(post, "%s&client_id=%s",		post, client_id);
 		sprintf(post, "%s&device_id=%s",		post, device_id);
 		sprintf(post, "%s&device_name=%s",	post, device_name);
@@ -185,7 +186,7 @@ void c_yandex_disk_url_to_ask_for_verification_code_for_user(
             return;			
 		}		
 		//parse JSON answer
-		cJSON *json = 
+		json = 
 			cJSON_ParseWithLength(s.str, s.len);
 		free(s.str);
 		if (cJSON_IsObject(json)) {
