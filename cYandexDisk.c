@@ -28,8 +28,10 @@
 #include <unistd.h>
 #endif
 
-#define STRCOPY(dst, src)\
-	({strncpy(dst, src, sizeof(dst)-1); dst[sizeof(dst)-1]=0;})
+static void STRCOPY(char *dst, const char *src)
+{
+	strncpy(dst, src, sizeof(dst)-1); dst[sizeof(dst)-1]=0;
+}
 
 //add strptime
 /*char * strptime(const char* s, const char* f, struct tm* tm);*/
