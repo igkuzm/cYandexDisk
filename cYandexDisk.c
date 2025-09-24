@@ -159,7 +159,6 @@ void c_yandex_disk_url_to_ask_for_verification_code_for_user(
 		cJSON *json; 
 		char requestString[] = "https://oauth.yandex.ru/device/code";	
 		CURLcode res;
-		cJSON *json; 
 
 		curl_easy_setopt(curl, CURLOPT_URL, requestString);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");		
@@ -190,12 +189,8 @@ void c_yandex_disk_url_to_ask_for_verification_code_for_user(
             return;			
 		}		
 		//parse JSON answer
-<<<<<<< HEAD
 		json = 
 			cJSON_ParseWithLength(s.str, s.len);
-=======
-		json = cJSON_ParseWithLength(s.str, s.len);
->>>>>>> 0228f10 (Updated cYandexDisk.c)
 		free(s.str);
 		if (cJSON_IsObject(json)) {
 			cJSON *device_code = cJSON_GetObjectItem(json, "device_code");			
@@ -266,6 +261,7 @@ void c_yandex_disk_get_token_from_user(
 	str_init(&s);
 
 	if(curl) {
+		int i;
 		char post[BUFSIZ];
 		struct curl_slist *header = NULL;
 		char requestString[] = "https://oauth.yandex.ru/token";	
@@ -274,8 +270,8 @@ void c_yandex_disk_get_token_from_user(
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");		
 		curl_easy_setopt(curl, CURLOPT_HEADER, 0);
 
-	    header = curl_slist_append(header, "Connection: close");		
-	    header = curl_slist_append(header, "Content-Type: application/x-www-form-urlencoded");		
+	  header = curl_slist_append(header, "Connection: close");		
+	  header = curl_slist_append(header, "Content-Type: application/x-www-form-urlencoded");		
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
 		
 		sprintf(post, "grant_type=device_code");		
@@ -290,7 +286,6 @@ void c_yandex_disk_get_token_from_user(
 
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
 
-		int i;
 		for (i=0; i < expires_in; i += interval){
 			
 			cJSON *json; 
