@@ -16,7 +16,7 @@
 
 #include "cYandexOAuth.h"
 
-#ifdef __WIN32__
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
@@ -295,7 +295,7 @@ void c_yandex_oauth_get_token_from_user(
 
 		int i;
 		for (i=0; i < expires_in; i += interval){
-#ifdef __WIN32__
+#ifdef _WIN32
 			Sleep(interval*1000);
 #else
 			sleep(interval);

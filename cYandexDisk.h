@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-#ifdef __WIN32__
+#ifdef _WIN32
 #ifndef bool
 #define bool char
 #define true 1
