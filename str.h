@@ -39,6 +39,7 @@
 #ifndef STR_H_
 #define STR_H_
 #include <stdio.h>
+#include <stdarg.h>
 
 /* dynamic string structure */
 struct str {
@@ -55,7 +56,7 @@ static void str_append(
 		struct str *s, const char *str, int len);
 
 /* append fprint-like formated c string */
-#define str_appendf(pStruct_str, ...)
+static void str_appendf(struct str *s, const char *fmt, ...);
 
 /* IMPLIMATION */
 #include <string.h>
@@ -113,13 +114,14 @@ void str_append(
 	s->str[s->len] = 0;
 }
 
-#undef  str_appendf
-#define str_appendf(pStruct_str, ...)\
-	({\
-	 char __str[BUFSIZ];\
-	 snprintf(__str, BUFSIZ-1, __VA_ARGS__);\
-	 __str[BUFSIZ-1] = 0;\
-	 str_append(pStruct_str, __str, strlen(__str));\
-	 })
+void str_appendf(struct str *s, const char *fmt, ...)
+{
+	char str[BUFSIZ];
+	va_list args;
+	va_start(args, s);
+	vsprintf(str, fmt, args);
+	va_end(args);
+	str_append(s, str, strlen(str));
+}
 
 #endif /* ifndef STR_H_ */
