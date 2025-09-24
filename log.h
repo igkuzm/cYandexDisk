@@ -89,11 +89,11 @@ static void LOG(const char *fmt, ...) {
 }
 
 static void ERR(const char *fmt, ...) {
+	char str[BUFSIZ];
 	va_list args;
 	va_start(args, fmt);
 	vsprintf(__buf, fmt, args);
 	va_end(args);
-	char str[BUFSIZ]; 
 	sprintf(str, "E/%s: %d: %s", __FILE__, __LINE__, __buf);
 	perror(str);
 }
