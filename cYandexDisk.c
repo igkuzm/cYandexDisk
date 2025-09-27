@@ -454,7 +454,8 @@ int curl_download_file(FILE *fp, const char * url, void * user_data, void (*call
 
 		if(res != CURLE_OK) {
 			if (callback)
-				callback(fp, 0,user_data, STR("cYandexDisk: curl_easy_perform() failed: %d(%s)\n",res, curl_easy_strerror(res)));
+				callback(fp, 0,user_data, STR("cYandexDisk: curl_easy_perform() failed: %d\n",res));
+				//callback(fp, 0,user_data, STR("cYandexDisk: curl_easy_perform() failed: %d(%s)\n",res, curl_easy_strerror(res)));
 			curl_easy_cleanup(curl);
 			return -1;
 		} else {
