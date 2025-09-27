@@ -33,7 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void *MALLOC(size_t size)
+static void *MALLOC(size_t size)
 {
 	void *ptr = malloc(size);
 	if (ptr)
@@ -41,7 +41,7 @@ void *MALLOC(size_t size)
 	return ptr;
 }
 
-void *REALLOC(void *p, size_t size)
+static void *REALLOC(void *p, size_t size)
 {
 	void *ptr = realloc(p, size);
 	if (ptr)
