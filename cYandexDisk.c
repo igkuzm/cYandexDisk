@@ -518,7 +518,7 @@ size_t curl_download_data(const char * url, void * user_data, void (*callback)(v
 
 		if(res != CURLE_OK) {
 			if (callback)
-				callback(NULL, 0, user_data, STR("cYandexDisk: curl_easy_perform() failed: %d(%s)\n", res, curl_easy_strerror(res)));
+				callback(NULL, 0, user_data, STR("cYandexDisk: curl_easy_perform() failed: %d\n", res));
 			curl_easy_cleanup(curl);
 			////return -1;
 		} else {
@@ -603,7 +603,7 @@ int curl_upload_file(FILE *fp, const char * url, void *user_data, void (*callbac
 		/* Check for errors */
 		if(res != CURLE_OK) {
 			if (callback)
-				callback(fp, 0,user_data, STR("cYandexDisk: curl_easy_perform() failed: %d(%s)\n", res, curl_easy_strerror(res)));
+				callback(fp, 0,user_data, STR("cYandexDisk: curl_easy_perform() failed: %d\n", res));
 			curl_easy_cleanup(curl);
 			return -1;
 		}
@@ -690,7 +690,7 @@ int curl_upload_data(void * data, size_t size, const char * url, void *user_data
 		/* Check for errors */
 		if(res != CURLE_OK) {
 			if (callback)
-				callback(data, 0, user_data, STR("cYandexDisk: curl_easy_perform() failed: %d(%s)\n", res, curl_easy_strerror(res)));
+				callback(data, 0, user_data, STR("cYandexDisk: curl_easy_perform() failed: %d\n", res));
 			curl_easy_cleanup(curl);
 			return -1;
 		}
