@@ -118,7 +118,7 @@ void str_appendf(struct str *s, const char *fmt, ...)
 {
 	char str[BUFSIZ];
 	va_list args;
-	va_start(args, s);
+	va_start(args, fmt);
 	vsprintf(str, fmt, args);
 	va_end(args);
 	str_append(s, str, strlen(str));
