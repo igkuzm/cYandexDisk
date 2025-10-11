@@ -35,15 +35,18 @@ elseif(APPLE)
 	INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/curl/iOS/include)
   endif()
 elseif(WIN32)
-	ADD_LIBRARY(z STATIC IMPORTED)
-	SET_TARGET_PROPERTIES(z PROPERTIES IMPORTED_LOCATION
+#libz
+	add_library(z STATIC IMPORTED)
+	set_target_properties(z PROPERTIES IMPORTED_LOCATION
 		${CYANDEXDISK_SOURCE_DIR}/win32/libz.a)
-	ADD_LIBRARY(pthreads_win32 STATIC IMPORTED)
-		SET_TARGET_PROPERTIES(pthreads_win32 PROPERTIES IMPORTED_LOCATION
-			${CYANDEXDISK_SOURCE_DIR}/pthreads-win32/lib/libpthreadGC1.a)
-		INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/pthreads-win32/include)	
+#pthreads
+	add_library(pthreads STATIC IMPORTED)
+		set_target_properties(pthreads PROPERTIES IMPORTED_LOCATION
+			${CYANDEXDISK_SOURCE_DIR}/cygwin/lib/libpthread.a)
+		include_directories(${CYANDEXDISK_SOURCE_DIR}/cygwin/include)	
 	#add strptime
 	#set(ADDSRC strptime.cc)
+#curl
 	ADD_LIBRARY(curl STATIC IMPORTED)
 	if(CMAKE_SIZEOF_VOID_P EQUAL 8) #64 bit WIN64	
 		SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION
