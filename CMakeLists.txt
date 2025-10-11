@@ -19,7 +19,7 @@ project(
 )
 
 
-set (CMAKE_C_STANDARD 11)
+set (CMAKE_C_STANDARD 99)
 set (CMAKE_CXX_STANDARD 17)
 
 # Determine the location of the libraries to use based on the platform.
@@ -40,25 +40,18 @@ elseif(WIN32)
 	set_target_properties(z PROPERTIES IMPORTED_LOCATION
 		${CYANDEXDISK_SOURCE_DIR}/win32/libz.a)
 #pthreads
-	add_library(pthreads STATIC IMPORTED)
-		set_target_properties(pthreads PROPERTIES IMPORTED_LOCATION
-			${CYANDEXDISK_SOURCE_DIR}/cygwin/lib/libpthread.a)
-		include_directories(${CYANDEXDISK_SOURCE_DIR}/cygwin/include)	
+	add_library(pthread SHARED IMPORTED)
+	set_target_properties(pthread PROPERTIES IMPORTED_LOCATION
+	${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/lib/pthreadGC1.dll)
+	include_directories(${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/include)	
+	set(ADDLIBS pthread)
 	#add strptime
 	#set(ADDSRC strptime.cc)
 #curl
-	ADD_LIBRARY(curl STATIC IMPORTED)
-	if(CMAKE_SIZEOF_VOID_P EQUAL 8) #64 bit WIN64	
-		SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION
-			${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib/libcurl.dll.a)
-		INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/include)
-		#SET(ADDDIRS ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib)
-	elseif(CMAKE_SIZEOF_VOID_P EQUAL 4) #32 bit WIN32
-		SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION
-			${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib/libcurl.dll.a)	
-		INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/include)
-		#SET(ADDDIRS ${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib)
-	endif()
+	add_library(curl SHARED IMPORTED)		
+	set_target_properties(curl PROPERTIES IMPORTED_LOCATION
+		${CYANDEXDISK_SOURCE_DIR}/win32/curl/bin/libcurl.dll)	
+	include_directories(${CYANDEXDISK_SOURCE_DIR}/win32/curl/include)
 endif()
 
 if (MSVC)
@@ -79,7 +72,7 @@ add_library(${TARGET} STATIC
 	uuid4.c 
 	${ADDSRC})
 
-target_link_libraries(${TARGET} curl z)
+target_link_libraries(${TARGET} curl z ${ADDLIBS})
 target_link_directories(${TARGET} PRIVATE ${ADDDIRS})
 
 if(${CYD_BUILD_TEST})
@@ -91,15 +84,10 @@ endif()
 if (WIN32)
 	#curl libs
 	#Copy DLLs
-	if(CMAKE_SIZEOF_VOID_P EQUAL 8) #64 bit	
-		file(GLOB files 
-			"${CYANDEXDISK_SOURCE_DIR}/curl/windows/win64/lib/*.dll"
-			)	
-	elseif(CMAKE_SIZEOF_VOID_P EQUAL 4) #32 bit
-		file(GLOB files 
-			"${CYANDEXDISK_SOURCE_DIR}/curl/windows/win32/lib/*.dll"
-			)	
-	endif()	
+	file(GLOB files 
+		"${CYANDEXDISK_SOURCE_DIR}/win32/curl/bin/*.dll"
+		"${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/lib/pthreadGC1.dll"
+		)	
 	#Copy
 	foreach(_file ${files})
 			file(INSTALL
