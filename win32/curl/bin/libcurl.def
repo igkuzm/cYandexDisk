@@ -82,6 +82,5 @@ EXPORTS
     curl_url_dup @81
     curl_url_get @82
     curl_url_set @83
-    curl_url_strerror @84
-    curl_version @85
-    curl_version_info @86
+    curl_version @84
+    curl_version_info @85

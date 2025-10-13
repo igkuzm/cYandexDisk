@@ -1,7 +1,7 @@
 # HSTS support
 
-HTTP Strict-Transport-Security. Added as experimental in curl
-7.74.0. Supported "for real" since 7.77.0.
+curl features **EXPERIMENTAL** support for the Strict-Transport-Security: HTTP
+header. Added in curl 7.74.0
 
 ## Standard
 
