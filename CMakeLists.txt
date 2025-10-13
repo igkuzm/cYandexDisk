@@ -41,17 +41,19 @@ elseif(WIN32)
 		${CYANDEXDISK_SOURCE_DIR}/win32/libz.a)
 #pthreads
 	add_library(pthread SHARED IMPORTED)
-	set_target_properties(pthread PROPERTIES IMPORTED_LOCATION
-	${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/lib/pthreadGC1.dll)
+	set_target_properties(pthread PROPERTIES 
+		IMPORTED_LOCATION
+		${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/lib/pthreadGC1.dll
+		IMPORTED_IMPLIB ${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/lib/libpthreadGC1.a)	
 	include_directories(${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/include)	
-	set(ADDLIBS pthread)
-	#add strptime
-	#set(ADDSRC strptime.cc)
+	list(APPEND ADDLIBS pthread)
 #curl
 	add_library(curl SHARED IMPORTED)		
-	set_target_properties(curl PROPERTIES IMPORTED_LOCATION
-		${CYANDEXDISK_SOURCE_DIR}/win32/curl/bin/libcurl.dll)	
-	include_directories(${CYANDEXDISK_SOURCE_DIR}/win32/curl/include)
+	set_target_properties(curl PROPERTIES 
+		IMPORTED_LOCATION
+		${CYANDEXDISK_SOURCE_DIR}/win32/curl/bin/libcurl.dll	
+		IMPORTED_IMPLIB ${CYANDEXDISK_SOURCE_DIR}/win32/curl/lib/libcurl.dll.a)	
+	include_directories(${CYANDEXDISK_SOURCE_DIR}/win32/curl/include)	
 endif()
 
 if(APPLE)
