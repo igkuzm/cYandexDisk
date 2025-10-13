@@ -48,12 +48,11 @@ elseif(WIN32)
 	include_directories(${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/include)	
 	list(APPEND ADDLIBS pthread)
 #curl
-	add_library(curl SHARED IMPORTED)		
-	set_target_properties(curl PROPERTIES 
+add_library(curl STATIC IMPORTED)
+set_target_properties(curl PROPERTIES 
 		IMPORTED_LOCATION
-		${CYANDEXDISK_SOURCE_DIR}/win32/curl/bin/libcurl.dll	
-		IMPORTED_IMPLIB ${CYANDEXDISK_SOURCE_DIR}/win32/curl/lib/libcurl.dll.a)	
-	include_directories(${CYANDEXDISK_SOURCE_DIR}/win32/curl/include)	
+		${CYANDEXDISK_SOURCE_DIR}/win32/curl/lib/libcurl.dll.a)	
+	  include_directories(${CYANDEXDISK_SOURCE_DIR}/win32/curl/include)
 endif()
 
 if(APPLE)
@@ -81,7 +80,6 @@ if (WIN32)
 	#Copy DLLs
 	file(GLOB files 
 		"${CYANDEXDISK_SOURCE_DIR}/win32/curl/bin/*.dll"
-		"${CYANDEXDISK_SOURCE_DIR}/win32/curl/lib/*.dll"
 		"${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/lib/pthreadGC1.dll"
 		)	
 	#Copy
