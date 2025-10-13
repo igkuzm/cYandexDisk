@@ -54,13 +54,6 @@ elseif(WIN32)
 	include_directories(${CYANDEXDISK_SOURCE_DIR}/win32/curl/include)
 endif()
 
-if (MSVC)
-	ADD_LIBRARY(pthreads_win32 STATIC IMPORTED)
-		SET_TARGET_PROPERTIES(pthreads_win32 PROPERTIES IMPORTED_LOCATION
-			${CYANDEXDISK_SOURCE_DIR}/pthreads-win32/lib/libpthreadGC1.a)
-		INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/pthreads-win32/include)
-endif()
-
 if(APPLE)
 	SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -framework Foundation")
 endif()
