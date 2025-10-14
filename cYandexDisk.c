@@ -28,11 +28,6 @@
 #include <unistd.h>
 #endif
 
-static void STRCOPY(char *dst, const char *src)
-{
-	strncpy(dst, src, sizeof(dst)-1); dst[sizeof(dst)-1]=0;
-}
-
 //add strptime
 /*char * strptime(const char* s, const char* f, struct tm* tm);*/
 
@@ -1025,19 +1020,19 @@ int c_json_to_c_yd_file_t(cJSON *json, c_yd_file_t *file)
 
 	file->name[0] = '\0';
 	name = cJSON_GetObjectItem(json, "name");	
-	if (name) STRCOPY(file->name, name->valuestring);
+	if (name) strncpy(file->name, name->valuestring, sizeof(file->name));
 
 	file->type[0] = '\0';
 	type = cJSON_GetObjectItem(json, "type");	
-	if (type) STRCOPY(file->type, type->valuestring);	
+	if (type) strncpy(file->type, type->valuestring, sizeof(file->type));	
 
 	file->path[0] = '\0';
 	path = cJSON_GetObjectItem(json, "path");	
-	if (path) STRCOPY(file->path, path->valuestring);	
+	if (path) strncpy(file->path, path->valuestring, sizeof(file->path));	
 
 	file->mime_type[0] = '\0';
 	mime_type = cJSON_GetObjectItem(json, "mime_type");	
-	if (mime_type) STRCOPY(file->mime_type, mime_type->valuestring);	
+	if (mime_type) strncpy(file->mime_type, mime_type->valuestring, sizeof(file->mime_type));	
 
 	file->size = 0;
 	size = cJSON_GetObjectItem(json, "size");	
@@ -1045,15 +1040,15 @@ int c_json_to_c_yd_file_t(cJSON *json, c_yd_file_t *file)
 
 	file->preview[0] = '\0';
 	preview = cJSON_GetObjectItem(json, "preview");	
-	if (preview) STRCOPY(file->preview, preview->valuestring);	
+	if (preview) strncpy(file->preview, preview->valuestring, sizeof(file->preview));	
 
 	file->public_key[0] = '\0';
 	public_key = cJSON_GetObjectItem(json, "public_key");	
-	if (public_key) STRCOPY(file->public_key, public_key->valuestring);	
+	if (public_key) strncpy(file->public_key, public_key->valuestring, sizeof(file->public_key));	
 	
 	file->public_url[0] = '\0';
 	public_url = cJSON_GetObjectItem(json, "public_url");	
-	if (public_url) STRCOPY(file->public_url, public_url->valuestring);	
+	if (public_url) strncpy(file->public_url, public_url->valuestring, sizeof(file->public_url));	
 
 	file->modified = 0;
 	modified = cJSON_GetObjectItem(json, "modified");	
