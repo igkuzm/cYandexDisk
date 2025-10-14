@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 #ifdef _MSC_VER
-#define EXPORTDLL EXPORTDLL
+#define EXPORTDLL __declspec(dllexport)
 #else
 #define EXPORTDLL
 #endif

@@ -12,7 +12,7 @@
 #define UUID4_LEN 37
 
 #ifdef _MSC_VER
-#define EXPORTDLL EXPORTDLL
+#define EXPORTDLL __declspec(dllexport)
 #else
 #define EXPORTDLL
 #endif
