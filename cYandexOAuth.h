@@ -13,6 +13,12 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#define EXPORTDLL EXPORTDLL
+#else
+#define EXPORTDLL
+#endif
+
 #define VERIFY_SSL 0L
 
 /*
@@ -50,13 +56,13 @@ extern "C" {
 
 /* return allocated c null-terminated string
  * with url to get oauth code or NULL on error*/
-char * c_yandex_oauth_code_on_page(const char *client_id);
+char EXPORTDLL * c_yandex_oauth_code_on_page(const char *client_id);
 
 /* return allocated c null-terminated string
  * with oauth code or NULL on error*/
-char * c_yandex_oauth_code_from_html(const char *html);
+char EXPORTDLL * c_yandex_oauth_code_from_html(const char *html);
 
-void c_yandex_oauth_code_from_user(
+void EXPORTDLL c_yandex_oauth_code_from_user(
 		const char *client_id, 
 		const char *device_name,  //device name - any
 		void * user_data,
@@ -71,7 +77,7 @@ void c_yandex_oauth_code_from_user(
 			)
 		);
 
-void c_yandex_oauth_get_token_from_user(
+void EXPORTDLL c_yandex_oauth_get_token_from_user(
 		const char *device_code, 
 		const char *client_id,    //id of application in Yandex
 		const char *client_secret,//secret of application in Yandex
@@ -87,7 +93,7 @@ void c_yandex_oauth_get_token_from_user(
 			)
 	);
 
-void c_yandex_oauth_get_token(
+void EXPORTDLL c_yandex_oauth_get_token(
 		const char *verification_code, 
 		const char *client_id, 
 		const char *client_secret, 

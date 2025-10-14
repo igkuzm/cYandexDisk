@@ -11,12 +11,18 @@
 #define UUID4_VERSION "1.0.0"
 #define UUID4_LEN 37
 
+#ifdef _MSC_VER
+#define EXPORTDLL EXPORTDLL
+#else
+#define EXPORTDLL
+#endif
+
 enum {
   UUID4_ESUCCESS =  0,
   UUID4_EFAILURE = -1
 };
 
-int  __declspec(dllexport) uuid4_init(void);
-void __declspec(dllexport) uuid4_generate(char *dst);
+int  EXPORTDLL uuid4_init(void);
+void EXPORTDLL uuid4_generate(char *dst);
 
 #endif
