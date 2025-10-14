@@ -16,7 +16,7 @@ enum {
   UUID4_EFAILURE = -1
 };
 
-int  uuid4_init(void);
-void uuid4_generate(char *dst);
+int  __declspec(dllexport) uuid4_init(void);
+void __declspec(dllexport) uuid4_generate(char *dst);
 
 #endif
