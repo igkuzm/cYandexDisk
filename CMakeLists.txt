@@ -81,6 +81,7 @@ if (WIN32)
 	#Copy DLLs
 	file(GLOB files 
 		"${CYANDEXDISK_SOURCE_DIR}/win32/curl/bin/*.dll"
+		"${CYANDEXDISK_SOURCE_DIR}/win32/curl/lib/*.dll"
 		"${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/lib/pthreadGC1.dll"
 		)	
 	#Copy
