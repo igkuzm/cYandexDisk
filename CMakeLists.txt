@@ -18,22 +18,25 @@ project(
 	LANGUAGES C 
 )
 
-
 set (CMAKE_C_STANDARD 99)
 set (CMAKE_CXX_STANDARD 17)
+
+if(APPLE)
+	SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -framework Foundation")
+endif()
 
 # Determine the location of the libraries to use based on the platform.
 if(ANDROID)
 	ADD_LIBRARY(curl STATIC IMPORTED)
-	SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION ${CYANDEXDISK_SOURCE_DIR}/curl/android/${ANDROID_ABI}/libcurl.a)
-	INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/curl/android/include)
+	SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION
+		${CYANDEXDISK_SOURCE_DIR}/android/curl/${ANDROID_ABI}/libcurl.a)
+	INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/android/curl/include)
 	set(LIBZ z)
-elseif(APPLE)
-  if(IOS)
+elseif(IOS)
 	ADD_LIBRARY(curl STATIC IMPORTED)
-	SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION ${CYANDEXDISK_SOURCE_DIR}/curl/iOS/libcurl.a)
-	INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/curl/iOS/include)
-  endif()
+	SET_TARGET_PROPERTIES(curl PROPERTIES IMPORTED_LOCATION 
+		${CYANDEXDISK_SOURCE_DIR}/iOS/curl/libcurl.a)
+	INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/iOS/curl/include)
 elseif(WIN32)
 #libz
 	add_library(z STATIC IMPORTED)
@@ -53,10 +56,9 @@ set_target_properties(curl PROPERTIES
 		IMPORTED_LOCATION
 		${CYANDEXDISK_SOURCE_DIR}/win32/curl/lib/libcurl.dll.a)	
 	  include_directories(${CYANDEXDISK_SOURCE_DIR}/win32/curl/include)
-endif()
-
-if(APPLE)
-	SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -framework Foundation")
+else()
+	find_package(CURL)
+	include_directories(${CURL_INCLUDE_DIRS})
 endif()
 
 add_library(${TARGET} STATIC 
@@ -67,7 +69,6 @@ add_library(${TARGET} STATIC
 	${ADDSRC})
 
 target_link_libraries(${TARGET} curl z ${ADDLIBS})
-target_link_directories(${TARGET} PRIVATE ${ADDDIRS})
 
 if(${CYD_BUILD_TEST})
 	add_executable(cYandexDisk_test test.c)
