@@ -44,7 +44,7 @@ static char __buf[BUFSIZ];
 static char *STR(const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
-	vsprintf(__buf, fmt, args);
+	vsnprintf(__buf, BUFSIZ-1,fmt, args);
 	va_end(args);
 	return __buf;
 }
@@ -53,9 +53,9 @@ static char * STR_ERR(const char *fmt, ...) {
 	char str[BUFSIZ];
 	va_list args;
 	va_start(args, fmt);
-	vsprintf(str, fmt, args);
+	vsnprintf(str, BUFSIZ-1,fmt, args);
 	va_end(args);
-	sprintf(__buf, "E/%s: %d: %s", __FILE__, __LINE__, str);
+	snprintf(__buf, BUFSIZ-1,"E/%s: %d: %s", __FILE__, __LINE__, str);
 	return __buf;
 }
 
@@ -63,9 +63,9 @@ static char * STR_LOG(const char *fmt, ...) {
 	char str[BUFSIZ];
 	va_list args;
 	va_start(args, fmt);
-	vsprintf(str, fmt, args);
+	vsnprintf(str, BUFSIZ-1,fmt, args);
 	va_end(args);
-	sprintf(__buf, "E/%s: %d: %s", __FILE__, __LINE__, str);
+	snprintf(__buf, BUFSIZ-1,"E/%s: %d: %s", __FILE__, __LINE__, str);
 	return __buf;
 }
 
@@ -83,7 +83,7 @@ static char * STR_LOG(const char *fmt, ...) {
 static void LOG(const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
-	vsprintf(__buf, fmt, args);
+	vsnprintf(__buf, BUFSIZ-1,fmt, args);
 	va_end(args);
 	fprintf(stderr, "%s: %d: %s\n",   __FILE__, __LINE__, __buf);
 }
@@ -92,9 +92,9 @@ static void ERR(const char *fmt, ...) {
 	char str[BUFSIZ];
 	va_list args;
 	va_start(args, fmt);
-	vsprintf(__buf, fmt, args);
+	vsnprintf(__buf, BUFSIZ-1,fmt, args);
 	va_end(args);
-	sprintf(str, "E/%s: %d: %s", __FILE__, __LINE__, __buf);
+	snprintf(str, BUFSIZ-1,"E/%s: %d: %s", __FILE__, __LINE__, __buf);
 	perror(str);
 }
 
