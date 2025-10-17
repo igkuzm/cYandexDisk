@@ -2,7 +2,7 @@
  * File              : cYandexOAuth.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 12.08.2023
- * Last Modified Date: 28.12.2024
+ * Last Modified Date: 17.10.2025
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -15,6 +15,7 @@
 #include <unistd.h>
 
 #include "cYandexOAuth.h"
+#include "log.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -188,7 +189,7 @@ void c_yandex_oauth_code_from_user(
 		CURLcode res = curl_easy_perform(curl);
 
 		if (res) { //handle erros
-			callback(user_data, NULL, NULL, NULL, 0, 0, curl_easy_strerror(res));
+			callback(user_data, NULL, NULL, NULL, 0, 0, STR("curl_error: %d", res));
 			free(s.ptr);
 			curl_easy_cleanup(curl);
 			curl_slist_free_all(header);
@@ -420,7 +421,7 @@ void c_yandex_oauth_get_token(
 		CURLcode res = curl_easy_perform(curl);
 
 		if (res) { //handle erros
-			callback(user_data, NULL, 0, NULL, curl_easy_strerror(res));
+			callback(user_data, NULL, 0, NULL, STR("curl_error: %d", res));
 			free(s.ptr);
 			curl_easy_cleanup(curl);
 			curl_slist_free_all(header);
