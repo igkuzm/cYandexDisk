@@ -38,17 +38,23 @@ elseif(IOS)
 		${CYANDEXDISK_SOURCE_DIR}/iOS/curl/libcurl.a)
 	INCLUDE_DIRECTORIES(${CYANDEXDISK_SOURCE_DIR}/iOS/curl/include)
 elseif(WIN32)
+	if (CMAKE_BUILD_TYPE STREQUAL "WINNT")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DTARGETWINNT")
+		set(WINDIR winnt)
+	else()
+		set(WINDIR win32)
+	endif()
 #libz
 	add_library(z STATIC IMPORTED)
 	set_target_properties(z PROPERTIES IMPORTED_LOCATION
-		${CYANDEXDISK_SOURCE_DIR}/win32/libz.a)
+		${CYANDEXDISK_SOURCE_DIR}/${WINDIR}/libz.a)
 #pthreads
 	find_package(Threads)
 	if (NOT Threads_FOUND)
 		add_library(pthread SHARED IMPORTED)
 		set_target_properties(pthread PROPERTIES 
 			IMPORTED_LOCATION
-			${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/lib/pthreadGC1.dll
+			${CYANDEXDISK_SOURCE_DIR}/${WINDIR}/pthreads-win32/lib/pthreadGC1.dll
 			IMPORTED_IMPLIB ${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/lib/libpthreadGC1.a)	
 		include_directories(${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/include)	
 	endif()
@@ -57,7 +63,7 @@ elseif(WIN32)
 add_library(curl STATIC IMPORTED)
 set_target_properties(curl PROPERTIES 
 		IMPORTED_LOCATION
-		${CYANDEXDISK_SOURCE_DIR}/win32/curl/lib/libcurl.dll.a)	
+		${CYANDEXDISK_SOURCE_DIR}/${WINDIR}/curl/lib/libcurl.dll.a)	
 	  include_directories(${CYANDEXDISK_SOURCE_DIR}/win32/curl/include)
 else()
 	find_package(CURL)
@@ -83,9 +89,9 @@ if (WIN32)
 	#curl libs
 	#Copy DLLs
 	file(GLOB files 
-		"${CYANDEXDISK_SOURCE_DIR}/win32/curl/bin/*.dll"
-		"${CYANDEXDISK_SOURCE_DIR}/win32/curl/lib/*.dll"
-		"${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/lib/pthreadGC1.dll"
+		"${CYANDEXDISK_SOURCE_DIR}/${WINDIR}/curl/bin/*.dll"
+		"${CYANDEXDISK_SOURCE_DIR}/${WINDIR}/curl/lib/*.dll"
+		"${CYANDEXDISK_SOURCE_DIR}/${WINDIR}/pthreads-win32/lib/pthreadGC1.dll"
 		)	
 	#Copy
 	foreach(_file ${files})
