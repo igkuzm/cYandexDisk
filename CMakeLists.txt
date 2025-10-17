@@ -55,8 +55,8 @@ elseif(WIN32)
 		set_target_properties(pthread PROPERTIES 
 			IMPORTED_LOCATION
 			${CYANDEXDISK_SOURCE_DIR}/${WINDIR}/pthreads-win32/lib/pthreadGC1.dll
-			IMPORTED_IMPLIB ${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/lib/libpthreadGC1.a)	
-		include_directories(${CYANDEXDISK_SOURCE_DIR}/win32/pthreads-win32/include)	
+			IMPORTED_IMPLIB ${CYANDEXDISK_SOURCE_DIR}/${WINDIR}/pthreads-win32/lib/libpthreadGC1.a)	
+		include_directories(${CYANDEXDISK_SOURCE_DIR}/${WINDIR}/pthreads-win32/include)	
 	endif()
 	list(APPEND ADDLIBS pthread)
 #curl
@@ -64,7 +64,7 @@ add_library(curl STATIC IMPORTED)
 set_target_properties(curl PROPERTIES 
 		IMPORTED_LOCATION
 		${CYANDEXDISK_SOURCE_DIR}/${WINDIR}/curl/lib/libcurl.dll.a)	
-	  include_directories(${CYANDEXDISK_SOURCE_DIR}/win32/curl/include)
+	include_directories(${CYANDEXDISK_SOURCE_DIR}/${WINDIR}/curl/include)
 else()
 	find_package(CURL)
 	include_directories(${CURL_INCLUDE_DIRS})
