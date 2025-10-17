@@ -43,7 +43,7 @@ elseif(WIN32)
 	set_target_properties(z PROPERTIES IMPORTED_LOCATION
 		${CYANDEXDISK_SOURCE_DIR}/win32/libz.a)
 #pthreads
-	find_package(Threads OPTIONAL)
+	find_package(Threads)
 	if (NOT Threads_FOUND)
 		add_library(pthread SHARED IMPORTED)
 		set_target_properties(pthread PROPERTIES 
