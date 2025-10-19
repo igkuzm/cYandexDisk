@@ -3,14 +3,11 @@ dnl Process this file with autoconf to produce a configure script.
 AC_INIT([libcYandexDisk], [1.1])
 AM_INIT_AUTOMAKE
 
+AC_PROG_LIBTOOL
 LT_INIT
-AC_CONFIG_MACRO_DIRS([m4])
 
 AC_PROG_CC
-AC_PROG_CXX
-
-AC_CANONICAL_HOST
-
+#AC_CANONICAL_HOST
 AC_CONFIG_SRCDIR
 
 case "${host_os}" in

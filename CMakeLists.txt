@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.9)
 
 set(TARGET cYandexDisk)
 
@@ -13,13 +13,10 @@ endif ()
 project(
 	${TARGET} VERSION 1.1 
 	DESCRIPTION "C API for Yandex Disk"
-	HOMEPAGE_URL ""
-	#LANGUAGES C CXX 
 	LANGUAGES C 
 )
 
 set (CMAKE_C_STANDARD 99)
-set (CMAKE_CXX_STANDARD 17)
 
 if(APPLE)
 	SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -framework Foundation")
