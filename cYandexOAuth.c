@@ -12,7 +12,6 @@
 #include <curl/curl.h>
 #include "uuid4.h"
 #include "cJSON.h"
-#include <unistd.h>
 
 #include "cYandexOAuth.h"
 #include "log.h"
@@ -144,6 +143,11 @@ void c_yandex_oauth_code_from_user(
 			)
 		)
 {
+	char device_id[37];
+	CURL *curl = curl_easy_init();
+	struct string s;
+	CURLcode res;
+
 	if (client_id == NULL) {
 		callback(user_data, NULL, NULL, NULL, 0, 0, "cYandexDisk: No client_id");
 		return;
@@ -154,28 +158,25 @@ void c_yandex_oauth_code_from_user(
 		return;
 	}
 
-	char device_id[37];
 	uuid4_init();
 	uuid4_generate(device_id);
-	
-	CURL *curl = curl_easy_init();
 		
-	struct string s;
 	init_string(&s);
 
 	if(curl) {
+		char post[BUFSIZ];
+		struct curl_slist *header = NULL;
 		char requestString[] = "https://oauth.yandex.ru/device/code";	
+		cJSON *json;
 		
 		curl_easy_setopt(curl, CURLOPT_URL, requestString);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");		
 		curl_easy_setopt(curl, CURLOPT_HEADER, 0);
 
-		struct curl_slist *header = NULL;
-	    header = curl_slist_append(header, "Connection: close");		
-	    header = curl_slist_append(header, "Content-Type: application/x-www-form-urlencoded");		
+		header = curl_slist_append(header, "Connection: close");		
+		header = curl_slist_append(header, "Content-Type: application/x-www-form-urlencoded");		
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
 		
-		char post[BUFSIZ];
 		sprintf(post, "%s&client_id=%s",		post, client_id);
 		sprintf(post, "%s&device_id=%s",		post, device_id);
 		sprintf(post, "%s&device_name=%s",	post, device_name);
@@ -187,7 +188,7 @@ void c_yandex_oauth_code_from_user(
 
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
 
-		CURLcode res = curl_easy_perform(curl);
+		res = curl_easy_perform(curl);
 
 		if (res) { //handle erros
 			callback(user_data, NULL, NULL, NULL, 0, 0, STR("curl_error: %d", res));
@@ -200,7 +201,7 @@ void c_yandex_oauth_code_from_user(
 		curl_slist_free_all(header);
 	
 		//parse JSON answer
-		cJSON *json = cJSON_ParseWithLength(s.ptr, s.len);
+		json = cJSON_ParseWithLength(s.ptr, s.len);
 		free(s.ptr);
 		if (cJSON_IsObject(json)) {
 			cJSON *device_code = cJSON_GetObjectItem(json, "device_code");			
@@ -246,6 +247,10 @@ void c_yandex_oauth_get_token_from_user(
 			)
 	)
 {	
+	char device_id[37];
+	CURL *curl = curl_easy_init();
+	struct string s;
+
 	if (device_code == NULL) {
 		if(callback)
 			callback(user_data, NULL, 0, NULL, "cYandexDisk: No device_code");
@@ -262,27 +267,25 @@ void c_yandex_oauth_get_token_from_user(
 		return;
 	}
 
-	char device_id[37];
 	uuid4_init();
 	uuid4_generate(device_id);
 	
-	CURL *curl = curl_easy_init();
-
-	struct string s;
-
 	if(curl) {
+		int i;
+		char post[BUFSIZ];
+		struct curl_slist *header = NULL;
 		char requestString[] = "https://oauth.yandex.ru/token";	
+		CURLcode res;
+		cJSON *json = NULL;
 		
 		curl_easy_setopt(curl, CURLOPT_URL, requestString);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");		
 		curl_easy_setopt(curl, CURLOPT_HEADER, 0);
 
-		struct curl_slist *header = NULL;
-	    header = curl_slist_append(header, "Connection: close");		
-	    header = curl_slist_append(header, "Content-Type: application/x-www-form-urlencoded");		
+		header = curl_slist_append(header, "Connection: close");		
+		header = curl_slist_append(header, "Content-Type: application/x-www-form-urlencoded");		
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
 		
-		char post[BUFSIZ];
 		sprintf(post, "grant_type=device_code");		
 		sprintf(post, "%s&code=%s",				  post, device_code);
 		sprintf(post, "%s&client_id=%s",		post, client_id);
@@ -295,7 +298,6 @@ void c_yandex_oauth_get_token_from_user(
 
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
 
-		int i;
 		for (i=0; i < expires_in; i += interval){
 #ifdef _WIN32
 			Sleep(interval*1000);
@@ -305,7 +307,7 @@ void c_yandex_oauth_get_token_from_user(
 			printf("ask for token...\n");
 			
 			init_string(&s);
-			CURLcode res = curl_easy_perform(curl);
+			res = curl_easy_perform(curl);
 
 			if (res) { //handle erros
 				//callback(user_data, NULL, 0, NULL, curl_easy_strerror(res));
@@ -314,11 +316,14 @@ void c_yandex_oauth_get_token_from_user(
 			}		
 			
 			//parse JSON answer
-			cJSON *json = 
-				cJSON_ParseWithLength(s.ptr, s.len);
+			json = cJSON_ParseWithLength(s.ptr, s.len);
 
 			free(s.ptr);
 			if (cJSON_IsObject(json)) {
+
+				cJSON *expires_in;
+				cJSON *refresh_token;	
+
 				cJSON *access_token =
 				 	cJSON_GetObjectItem(json, "access_token");			
 				if (!access_token) { //handle errors
@@ -344,10 +349,8 @@ void c_yandex_oauth_get_token_from_user(
 					return;;
 				}
 				//OK - we have a token
-				cJSON *expires_in = 
-					cJSON_GetObjectItem(json, "expires_in");
-			 cJSON *refresh_token =	
-				 cJSON_GetObjectItem(json, "refresh_token");
+				expires_in = cJSON_GetObjectItem(json, "expires_in");
+			  refresh_token =	cJSON_GetObjectItem(json, "refresh_token");
 				
 				if (callback)
 					callback(
@@ -378,33 +381,35 @@ void c_yandex_oauth_get_token(
 			)
 		)
 {
+	char device_id[37];
+	CURL *curl = curl_easy_init();
+	struct string s;
+
 	if (verification_code == NULL) {
 		callback(user_data, NULL, 0, NULL, "cYandexDisk: No verification_code");
 		return;
 	}
 
-	char device_id[37];
 	uuid4_init();
 	uuid4_generate(device_id);
-	
-	CURL *curl = curl_easy_init();
 		
-	struct string s;
 	init_string(&s);
 
 	if(curl) {
+		char post[BUFSIZ];
 		char requestString[] = "https://oauth.yandex.ru/token";	
+		struct curl_slist *header = NULL;
+		CURLcode res;
+		cJSON *json;
 		
 		curl_easy_setopt(curl, CURLOPT_URL, requestString);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");		
 		curl_easy_setopt(curl, CURLOPT_HEADER, 0);
 
-		struct curl_slist *header = NULL;
 	    header = curl_slist_append(header, "Connection: close");		
 	    header = curl_slist_append(header, "Content-Type: application/x-www-form-urlencoded");		
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
 		
-		char post[BUFSIZ];
 		sprintf(post, "grant_type=authorization_code");		
 		sprintf(post, "%s&code=%s",				post, verification_code);
 		sprintf(post, "%s&client_id=%s",		post, client_id);
@@ -419,7 +424,7 @@ void c_yandex_oauth_get_token(
 
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, VERIFY_SSL);		
 
-		CURLcode res = curl_easy_perform(curl);
+		res = curl_easy_perform(curl);
 
 		if (res) { //handle erros
 			callback(user_data, NULL, 0, NULL, STR("curl_error: %d", res));
@@ -432,7 +437,7 @@ void c_yandex_oauth_get_token(
 		curl_slist_free_all(header);
 		
 		//parse JSON answer
-		cJSON *json = cJSON_ParseWithLength(s.ptr, s.len);
+		json = cJSON_ParseWithLength(s.ptr, s.len);
 		free(s.ptr);
 		if (cJSON_IsObject(json)) {
 			cJSON *access_token = cJSON_GetObjectItem(json, "access_token");			

@@ -25,30 +25,24 @@ extern "C" {
 #include <stdbool.h>
 #endif
 
-#ifdef _MSC_VER
-#define EXPORTDLL __declspec(dllexport)
-#else
-#define EXPORTDLL
-#endif
-
 #include <stdio.h>
 #include <time.h>
 
 // allocate and return URL with verification code request
-char EXPORTDLL * c_yandex_disk_url_to_ask_for_verification_code(
+extern char * c_yandex_disk_url_to_ask_for_verification_code(
 		const char *client_id,    //id of application in Yandex
 		char **error			  //error
 );
 
 // parse html, allocate and return verification code from Yandex
-char EXPORTDLL * c_yandex_disk_verification_code_from_html(
+extern char * c_yandex_disk_verification_code_from_html(
 		const char *html,         //html to search verification code
 		char **error		      //error
 );
 
 
 // get authorization token
-void EXPORTDLL c_yandex_disk_get_token(
+extern void c_yandex_disk_get_token(
 		const char *verification_code, 
 		const char *client_id,    //id of application in Yandex
 		const char *client_secret,//secret of application in Yandex
@@ -65,7 +59,7 @@ void EXPORTDLL c_yandex_disk_get_token(
 
 /* To get yandex disk token - you may ask client to enter code in
  * https://oauth.yandex.ru/device */
-void EXPORTDLL c_yandex_disk_url_to_ask_for_verification_code_for_user(
+extern void c_yandex_disk_url_to_ask_for_verification_code_for_user(
 		const char *client_id, //id of application in Yandex
 		const char *device_name,  //device name
 		void * user_data,
@@ -81,7 +75,7 @@ void EXPORTDLL c_yandex_disk_url_to_ask_for_verification_code_for_user(
 );
 
 // get authorization token from clients device
-void EXPORTDLL c_yandex_disk_get_token_from_user(
+extern void c_yandex_disk_get_token_from_user(
 		const char *device_code, 
 		const char *client_id,    //id of application in Yandex
 		const char *client_secret,//secret of application in Yandex
@@ -114,7 +108,7 @@ typedef struct c_yd_file_t {
 
 
 // get info of file/directory
-int EXPORTDLL c_yandex_disk_file_info(
+extern int c_yandex_disk_file_info(
 		const char * access_token, 
 		const char * path,
 		c_yd_file_t *file,
@@ -123,7 +117,7 @@ int EXPORTDLL c_yandex_disk_file_info(
 
 
 //upload file to Yandex Disk
-int EXPORTDLL c_yandex_disk_upload_file(
+extern int c_yandex_disk_upload_file(
 		const char * access_token, //authorization token
 		FILE *fp,                  //pointer to file read stream
 		const char * path,         //path in yandex disk to save file - start with app:/
@@ -147,7 +141,7 @@ int EXPORTDLL c_yandex_disk_upload_file(
 );
 
 //upload data to Yandex Disk
-int EXPORTDLL c_yandex_disk_upload_data(
+extern int c_yandex_disk_upload_data(
 		const char * access_token, //authorization token
 		void * data,			   //data to upload
 		size_t size,			   //data size
@@ -172,7 +166,7 @@ int EXPORTDLL c_yandex_disk_upload_data(
 );
 
 //Download file from Yandex Disk
-int EXPORTDLL c_yandex_disk_download_file(             
+extern int c_yandex_disk_download_file(             
 		const char * access_token, //authorization token
 		FILE *fp,                  //pointer to file write stream
 		const char * path,         //path in yandex disk of file to download - start with app:/
@@ -195,7 +189,7 @@ int EXPORTDLL c_yandex_disk_download_file(
 );
 
 //Download data from Yandex Disk - return data size
-int EXPORTDLL c_yandex_disk_download_data(             
+extern int c_yandex_disk_download_data(             
 		const char * access_token, //authorization token
 		const char * path,         //path in yandex disk of file to download - start with app:/
 		bool wait_finish,
@@ -217,7 +211,7 @@ int EXPORTDLL c_yandex_disk_download_data(
 );
 
 //list directory or get info of file
-int EXPORTDLL c_yandex_disk_ls(			   
+extern int c_yandex_disk_ls(			   
 		const char * access_token, //authorization token
 		const char * path,		   //path in yandex disk (file or directory)
 		void * user_data,		   //pointer of data return from callback 
@@ -229,7 +223,7 @@ int EXPORTDLL c_yandex_disk_ls(
 );
 
 //list of shared resources
-int EXPORTDLL c_yandex_disk_ls_public(
+extern int c_yandex_disk_ls_public(
 		const char * access_token, //authorization token
 		void * user_data,		   //pointer of data return from callback 
 		int(*callback)(			   //callback function
@@ -240,19 +234,19 @@ int EXPORTDLL c_yandex_disk_ls_public(
 );
 
 //allocate and return url of file
-char EXPORTDLL * c_yandex_disk_file_url(const char * access_token, const char * path, char **error);
+extern char * c_yandex_disk_file_url(const char * access_token, const char * path, char **error);
 
 //create directory
-int EXPORTDLL c_yandex_disk_mkdir(const char * access_token, const char * path, char **error);
+extern int c_yandex_disk_mkdir(const char * access_token, const char * path, char **error);
 
 //remove file/directory
-int EXPORTDLL c_yandex_disk_rm(const char * access_token, const char * path, char **error);
+extern int c_yandex_disk_rm(const char * access_token, const char * path, char **error);
 
 //update resource data
-int EXPORTDLL c_yandex_disk_patch(const char * access_token, const char * path, const char *json_data, char **error);
+extern int c_yandex_disk_patch(const char * access_token, const char * path, const char *json_data, char **error);
 
 //copy file from to
-int EXPORTDLL c_yandex_disk_cp(
+extern int c_yandex_disk_cp(
 		const char * access_token, //authorization token
 		const char * from,		   //from path in Yandex Disk 
 		const char * to,	       //to path in Yandex Disk 
@@ -265,7 +259,7 @@ int EXPORTDLL c_yandex_disk_cp(
 );
 
 //move file from to
-int EXPORTDLL c_yandex_disk_mv(
+extern int c_yandex_disk_mv(
 		const char * access_token, //authorization token
 		const char * from,		   //from path in Yandex Disk 
 		const char * to,	       //to path in Yandex Disk 
@@ -278,13 +272,13 @@ int EXPORTDLL c_yandex_disk_mv(
 );
 
 //publish file
-int EXPORTDLL c_yandex_disk_publish(const char * access_token, const char * path, char **error);
+extern int c_yandex_disk_publish(const char * access_token, const char * path, char **error);
 
 //unpublish file
-int EXPORTDLL c_yandex_disk_unpublish(const char * access_token, const char * path, char **error);
+extern int c_yandex_disk_unpublish(const char * access_token, const char * path, char **error);
 
 //get information of public resource
-int EXPORTDLL c_yandex_disk_public_ls(
+extern int c_yandex_disk_public_ls(
 		const char * access_token, //authorization token
 		const char * public_key,   //key or url of public resource 
 		void * user_data,          //pointer of data to transfer throw callback 
@@ -296,7 +290,7 @@ int EXPORTDLL c_yandex_disk_public_ls(
 );	
 
 //Download public resources
-int EXPORTDLL c_yandex_disk_download_public_resource(             
+extern int c_yandex_disk_download_public_resource(             
 		const char * access_token, //authorization token
 		FILE *fp,                  //pointer to file write stream
 		const char * public_key,   //key or url of public resource 
@@ -318,7 +312,7 @@ int EXPORTDLL c_yandex_disk_download_public_resource(
 		)
 );
 
-int EXPORTDLL c_yandex_disk_download_public_resource_data(             
+extern int c_yandex_disk_download_public_resource_data(             
 		const char * access_token, //authorization token
 		const char * public_key,   //key or url of public resource 
 		bool wait_finish,
@@ -340,7 +334,7 @@ int EXPORTDLL c_yandex_disk_download_public_resource_data(
 );
 
 //copy public resource to Yandex Disk
-int EXPORTDLL c_yandex_disk_public_cp(
+extern int c_yandex_disk_public_cp(
 		const char * access_token, //authorization token
 		const char * public_key,   //from path in public resource of Yandex Disk 
 		const char * to,	       //to path in Yandex Disk 
@@ -352,7 +346,7 @@ int EXPORTDLL c_yandex_disk_public_cp(
 );
 
 //get information of trash resource
-int EXPORTDLL c_yandex_disk_trash_ls(
+extern int c_yandex_disk_trash_ls(
 		const char * access_token, //authorization token
 		void * user_data,          //pointer of data to transfer throw callback 
 		int(*callback)(			       //callback function
@@ -363,19 +357,19 @@ int EXPORTDLL c_yandex_disk_trash_ls(
 );	
 
 //restore removed resource
-int EXPORTDLL c_yandex_disk_trash_restore(const char * access_token, const char * path, char **error);
+extern int c_yandex_disk_trash_restore(const char * access_token, const char * path, char **error);
 
 //clear trash - remove all files
-int EXPORTDLL c_yandex_disk_trash_empty(const char * access_token, char **error);
+extern int c_yandex_disk_trash_empty(const char * access_token, char **error);
 
 // curl functions
-int EXPORTDLL curl_download_file(FILE *fp, const char * url, void * user_data, void (*callback)(FILE *fp, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow)); 
+extern int curl_download_file(FILE *fp, const char * url, void * user_data, void (*callback)(FILE *fp, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow)); 
 
-size_t EXPORTDLL curl_download_data(const char * url, void * user_data, void (*callback)(void *data, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow)); 
+extern size_t curl_download_data(const char * url, void * user_data, void (*callback)(void *data, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow)); 
 
-int EXPORTDLL curl_upload_file(FILE *fp, const char * url, void *user_data, void (*callback)(FILE *fp, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow));
+extern int curl_upload_file(FILE *fp, const char * url, void *user_data, void (*callback)(FILE *fp, size_t size, void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow));
 
-int EXPORTDLL curl_upload_data(void * data, size_t size, const char * url, void *user_data, void (*callback)(void *data, size_t size,void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow));
+extern int curl_upload_data(void * data, size_t size, const char * url, void *user_data, void (*callback)(void *data, size_t size,void *user_data, const char *error), void *clientp, int (*progress_callback)(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow));
 
 #ifdef __cplusplus
 }  /* end of the 'extern "C"' block */
