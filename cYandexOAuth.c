@@ -56,6 +56,7 @@ strfnd(
 char *c_yandex_oauth_code_from_html(
 		const char *html)
 {
+	int i;
 	const char * patterns[] = {
 		"verification_code%3Fcode%3D",
 		"class=\"verification-code-code\">"
@@ -65,9 +66,9 @@ char *c_yandex_oauth_code_from_html(
 		"<"
 	};	
 
-	int i;
-	for (int i = 0; i < 2; i++) {
+	for (i = 0; i < 2; i++) {
 		const char * s = patterns[i]; 
+		char * code = NULL;
 		int len = strlen(s);
 
 		//find start of verification code class structure in html
@@ -80,7 +81,7 @@ char *c_yandex_oauth_code_from_html(
 			long clen = end - len;
 
 			//allocate code and copy
-			char * code = (char *)malloc(clen + 1);
+			code = (char *)malloc(clen + 1);
 			if (!code){
 				perror("malloc");
 				return NULL;
