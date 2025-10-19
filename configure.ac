@@ -2,13 +2,19 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT([libcYandexDisk], [1.1])
 AM_INIT_AUTOMAKE
-
-#AC_PROG_LIBTOOL
 LT_INIT
 
 AC_PROG_CC
 AC_CANONICAL_HOST
 AC_CONFIG_SRCDIR
+
+AC_ARG_ENABLE([winnt], 
+							[AS_HELP_STRING([--enable-winnt], [Enable
+							 Windows NT 4.0 support @<:@no@:>@])],
+							 [enable_winnt=yes],
+							 [enable_winnt=no])
+
+AM_CONDITIONAL([WINNT], [test "$enable_winnt" = "yes"])
 
 case "${host_os}" in
     cygwin*|mingw*)
