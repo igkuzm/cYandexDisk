@@ -49,15 +49,17 @@ elseif(WIN32)
 	set_target_properties(z PROPERTIES IMPORTED_LOCATION
 		${CYANDEXDISK_SOURCE_DIR}/${WINDIR}/libz.a)
 #pthreads
-	find_package(Threads)
-	if (NOT Threads_FOUND)
+#find_package(Threads)
+#	if (Threads_FOUND)
+#		include_directories(${Threads_INCLUDE_DIR})
+#	else()
 		add_library(pthread SHARED IMPORTED)
 		set_target_properties(pthread PROPERTIES 
 			IMPORTED_LOCATION
 			${CYANDEXDISK_SOURCE_DIR}/${WINDIR}/pthreads-win32/lib/pthreadGC1.dll
 			IMPORTED_IMPLIB ${CYANDEXDISK_SOURCE_DIR}/${WINDIR}/pthreads-win32/lib/libpthreadGC1.a)	
 		include_directories(${CYANDEXDISK_SOURCE_DIR}/${WINDIR}/pthreads-win32/include)	
-	endif()
+#	endif()
 	list(APPEND ADDLIBS pthread)
 #curl
 add_library(curl STATIC IMPORTED)
