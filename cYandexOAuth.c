@@ -2,7 +2,7 @@
  * File              : cYandexOAuth.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 12.08.2023
- * Last Modified Date: 17.10.2025
+ * Last Modified Date: 21.04.2026
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 
@@ -18,7 +18,15 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#ifndef bool
+#define bool char
+#define true 1
+#define false 0
 #endif
+#else // not WIN32
+#include <unistd.h>
+#include <stdbool.h>
+#endif // WIN32
 
 /* return allocated c null-terminated string
  * with url to get oauth code or NULL on error*/
