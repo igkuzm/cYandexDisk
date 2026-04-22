@@ -16,6 +16,14 @@ AC_ARG_ENABLE([winnt],
 
 AM_CONDITIONAL([WINNT], [test "$enable_winnt" = "yes"])
 
+AC_ARG_ENABLE([withtest], 
+							[AS_HELP_STRING([--with-test], [Build
+							 'test' executable @<:@no@:>@])],
+							 [with_test=yes],
+							 [with_test=no])
+
+AM_CONDITIONAL([WITH_TEST], [test "$with_test" = "yes"])
+
 case "${host_os}" in
     cygwin*|mingw*)
         build_windows=yes;;

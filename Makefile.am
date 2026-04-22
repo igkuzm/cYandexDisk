@@ -29,5 +29,9 @@ else
 CURL_LINK = -lcurl
 endif
 
+if WITH_TEST
+libcYandexDisk_la_SOURCES += test.c 
+endif
+
 libcYandexDisk_la_CFLAGS = -fPIC $(CFLAGS_WIN32) $(CFLAGS_WIN64)
 libcYandexDisk_la_LIBADD = $(CURL_LINK) $(LINKS_WIN32) $(LINKS_WIN64)
