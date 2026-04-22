@@ -78,7 +78,7 @@ add_library(${TARGET} STATIC
 
 target_link_libraries(${TARGET} curl z ${ADDLIBS})
 
-if(${BUILD_TEST})
+if(${WITH_TEST})
 	add_executable(cYandexDisk_test test.c)
 	target_link_libraries(cYandexDisk_test ${TARGET})
 endif()
