@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 07.10.2024
+ * Last Modified Date: 23.04.2026
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 #include "cYandexDisk.h"
@@ -1155,6 +1155,27 @@ c_yandex_disk_file_info(
 	if (file)
 		c_json_to_c_yd_file_t(json, file);
 	return 0;
+}
+
+int c_yandex_disk_sort_ls(const char * token, const char * path, const char *sort, int l, void * user_data, int(*callback)(const c_yd_file_t *file, void * user_data, const char * error))
+{
+	char path_sort_arg[BUFSIZ];
+	int i = 0, r = 0;
+	char limit[BUFSIZ], offset[BUFSIZ];
+	
+	sprintf(path_sort_arg, "path=%s&sort=%s", 
+			path, sort);	
+	sprintf(limit, "limit=%d", l);
+	
+	while	(r == 0) {
+		cJSON *json;
+		char *error = NULL;
+		
+		sprintf(offset, "offset=%d", i++ * l);
+		json = c_yandex_disk_api("GET", "v1/disk/resources", NULL, token, &error, path_sort_arg, limit, offset, NULL);
+		r = _c_yandex_disk_ls_parser(json, error, user_data, callback);
+	}
+	return r;
 }
 
 int c_yandex_disk_ls(const char * token, const char * path, void * user_data, int(*callback)(const c_yd_file_t *file, void * user_data, const char * error))

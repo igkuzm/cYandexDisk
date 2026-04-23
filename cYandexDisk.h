@@ -2,7 +2,7 @@
  * File              : cYandexDisk.h
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 21.09.2024
+ * Last Modified Date: 23.04.2026
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 /*
@@ -27,70 +27,6 @@ extern "C" {
 
 #include <stdio.h>
 #include <time.h>
-
-// allocate and return URL with verification code request
-extern char * c_yandex_disk_url_to_ask_for_verification_code(
-		const char *client_id,    //id of application in Yandex
-		char **error			  //error
-);
-
-// parse html, allocate and return verification code from Yandex
-extern char * c_yandex_disk_verification_code_from_html(
-		const char *html,         //html to search verification code
-		char **error		      //error
-);
-
-
-// get authorization token
-extern void c_yandex_disk_get_token(
-		const char *verification_code, 
-		const char *client_id,    //id of application in Yandex
-		const char *client_secret,//secret of application in Yandex
-		const char *device_name,  //device name
-		void * user_data,
-		int (*callback)(
-			void * user_data,
-			const char * access_token,
-			time_t expires_in,
-			const char * refresh_token,
-			const char * error
-			)
-);
-
-/* To get yandex disk token - you may ask client to enter code in
- * https://oauth.yandex.ru/device */
-extern void c_yandex_disk_url_to_ask_for_verification_code_for_user(
-		const char *client_id, //id of application in Yandex
-		const char *device_name,  //device name
-		void * user_data,
-		int (*callback)(
-			void * user_data,
-			const char * device_code,
-			const char * user_code,
-			const char * verification_url,
-			int interval,
-			int expires_in,
-			const char * error
-			)
-);
-
-// get authorization token from clients device
-extern void c_yandex_disk_get_token_from_user(
-		const char *device_code, 
-		const char *client_id,    //id of application in Yandex
-		const char *client_secret,//secret of application in Yandex
-		int interval,
-		int expires_in,
-		void * user_data,
-		int (*callback)(
-			void * user_data,
-			const char * access_token,
-			time_t expires_in,
-			const char * refresh_token,
-			const char * error
-			)
-);
-
 
 /* yandex disk file structure */
 typedef struct c_yd_file_t {
@@ -214,6 +150,22 @@ extern int c_yandex_disk_download_data(
 extern int c_yandex_disk_ls(			   
 		const char * access_token, //authorization token
 		const char * path,		   //path in yandex disk (file or directory)
+		void * user_data,		   //pointer of data return from callback 
+		int(*callback)(			   //callback function
+			const c_yd_file_t *file,	   //information of resource 
+			void * user_data,	   //pointer of data return from callback 
+			const char * error	   //error
+		)
+);
+
+//list directory or get info of file
+extern int c_yandex_disk_sort_ls(			   
+		const char * access_token, //authorization token
+		const char * path,		   //path in yandex disk (file or directory)
+		const char * sort,       // sort by (name, path,
+														 // created, modified, size)
+														 // to reverse order use "-name"
+		int limit,
 		void * user_data,		   //pointer of data return from callback 
 		int(*callback)(			   //callback function
 			const c_yd_file_t *file,	   //information of resource 
