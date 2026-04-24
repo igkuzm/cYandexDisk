@@ -2,7 +2,7 @@
  * File              : cYandexDisk.c
  * Author            : Igor V. Sementsov <ig.kuzm@gmail.com>
  * Date              : 03.05.2022
- * Last Modified Date: 23.04.2026
+ * Last Modified Date: 24.04.2026
  * Last Modified By  : Igor V. Sementsov <ig.kuzm@gmail.com>
  */
 #include "cYandexDisk.h"
@@ -1165,16 +1165,16 @@ int c_yandex_disk_sort_ls(const char * token, const char * path, const char *sor
 	
 	sprintf(path_sort_arg, "path=%s&sort=%s", 
 			path, sort);	
-	sprintf(limit, "limit=%d", l);
+	sprintf(limit, "limit=%d", l<1?YD_ANSWER_LIMIT:l);
 	
-	while	(r == 0) {
+	do {
 		cJSON *json;
 		char *error = NULL;
 		
 		sprintf(offset, "offset=%d", i++ * l);
 		json = c_yandex_disk_api("GET", "v1/disk/resources", NULL, token, &error, path_sort_arg, limit, offset, NULL);
 		r = _c_yandex_disk_ls_parser(json, error, user_data, callback);
-	}
+	} while (r == 0 && l < 1);
 	return r;
 }
 
